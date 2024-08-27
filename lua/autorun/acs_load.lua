@@ -40,6 +40,10 @@ SharedScript("libs/sh_vehicleseat.lua")
 ClientsideScript("libs/cl_vehicleseat.lua")
 ServersideScript("libs/sv_vehicleseat.lua")
 
+SharedScript("libs/sh_projectilesystem.lua")
+ClientsideScript("libs/cl_projectilesystem.lua")
+ServersideScript("libs/sv_projectilesystem.lua")
+
 SharedScript("libs/sh_vehicleweapon.lua")
 ClientsideScript("libs/cl_vehicleweapon.lua")
 ServersideScript("libs/sv_vehicleweapon.lua")
