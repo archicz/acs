@@ -9,11 +9,6 @@ function missilesystem.SpawnMissile(launcher, localPos, localAng, missileName)
     local missileEnt = ents.Create(missilesystem.ClassName)
     local launcherOwner = launcher:GetRealOwner()
 
-    if IsValid(missileEnt) and not IsValid(launcherOwner) then
-        print("zasranej NADMOD pico")
-        SafeRemoveEntity(missileEnt)
-    end
-
     missileEnt.LaunchPosition = localPos
     missileEnt.LaunchAngles = localAng
 

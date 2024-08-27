@@ -6,11 +6,6 @@ function vehicleseat.CreateSeat(baseEnt, pos, ang, seatName)
     local seatEnt = ents.Create(vehicleseat.ClassName)
     local seatOwner = baseEnt:GetRealOwner()
 
-    if IsValid(seatEnt) and not IsValid(seatOwner) then
-        print("zasranej NADMOD pico")
-        seatOwner = Entity(1)
-    end
-
     if IsValid(seatEnt) and IsValid(seatOwner) then
         seatEnt:SeatSetup(seatName)
         seatEnt:SetRealOwner(seatOwner)
@@ -76,7 +71,7 @@ function vehicleseat.ClientNetwork(_, ply)
     local stateHandlers =
     {
         [VEHICLESEAT_NET_CMD] = function()
-            -- TODO, when needed
+            -- Not used by anything right now
         end,
 
         [VEHICLESEAT_NET_FREELOOK] = function()
