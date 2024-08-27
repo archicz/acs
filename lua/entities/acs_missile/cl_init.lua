@@ -1,6 +1,8 @@
 include("shared.lua")
 
 ENT.MissileSound = nil
+ENT.MissileTrailParticle = nil
+ENT.MissilePropellerParticle = nil
 
 function ENT:Initialize()
 end
@@ -15,8 +17,8 @@ function ENT:Think()
             ParticleEffectAttach("Rocket_Start_Flash", PATTACH_POINT, self, propellerFlashAttachment)
         
             local propellerAttachment = self:LookupAttachment("propeller")
-            ParticleEffectAttach("Rocket_Propeller", PATTACH_POINT_FOLLOW, self, propellerAttachment)
-            ParticleEffectAttach("Rocket_SmokeTrail", PATTACH_POINT_FOLLOW, self, propellerAttachment)
+            self.MissilePropellerParticle = CreateParticleSystem(self, "Rocket_Propeller", PATTACH_POINT_FOLLOW, propellerAttachment)
+            self.MissileTrailParticle = CreateParticleSystem(self, "Rocket_SmokeTrail", PATTACH_POINT_FOLLOW, propellerAttachment)
         end
     end
 end
@@ -28,5 +30,8 @@ end
 function ENT:OnRemove()
     if self.MissileSound then
         self.MissileSound:Stop()
+
+        self.MissilePropellerParticle:StopEmission(false, true)
+        self.MissileTrailParticle:StopEmission(false, true)
     end
 end
