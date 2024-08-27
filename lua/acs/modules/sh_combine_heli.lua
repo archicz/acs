@@ -375,21 +375,6 @@ if CLIENT then
     end
     
     function Autocannon:PrimaryFire()
-        local muzzle = self:LocalToWorld(self:WeaponData("muzzlePos"))
-        debugoverlay.Axis(muzzle, self:GetForward():Angle(), 10, 1, true)
-
-        local bulletInfo = {}
-        bulletInfo.Num = 2
-        bulletInfo.Src = muzzle
-        bulletInfo.Dir = self:GetForward()
-        bulletInfo.Spread = Vector(0, 0, 0)
-        bulletInfo.Tracer = 1
-        bulletInfo.TracerName = "ToolTracer"
-        bulletInfo.Force = 2
-        bulletInfo.Damage = 100
-
-        self:FireBullets(bulletInfo)
-        self:EmitSound("NPC_Combine_Cannon.FireBullet")
     end
 
     function Autocannon:SecondaryFire()
