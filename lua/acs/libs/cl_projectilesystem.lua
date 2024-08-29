@@ -1,37 +1,7 @@
 if not projectilesystem then return end
 
-local Projectile = {}
-Projectile.__index = Projectile
-
-function Projectile:ProjectileData(key)
-    local projTbl = projectilesystem.Get(self.Name)
-    return projTbl[key] or nil
-end
-
-function Projectile:ProjectileCall(fn, ...)
-    projectilesystem.Call(self.Name, fn, self, ...)
-end
-
-
-
-local ActiveProjectiles = {}
-
-function projectilesystem.CreateProjectile(launcher, pos, dir, projName)
-    if not projectilesystem.Get(projName) then return nil end
-
-    local activeProjectile = {}
-    activeProjectile.Launcher = launcher
-    activeProjectile.StartPos = pos
-    activeProjectile.StartDir = dir
-    activeProjectile.Name = projName
-
-    setmetatable(activeProjectile, Projectile)
-    table.insert(ActiveProjectiles, activeProjectile)
-
-    activeProjectile:OnCreated()
-
-    return activeProjectile
-end
+local ActiveProjectiles = projectilesystem.GetActive()
+local Projectile = projectilesystem.GetProjectileMeta()
 
 function projectilesystem.ServerNetwork()
     local state = net.ReadUInt(4)
@@ -53,4 +23,18 @@ function projectilesystem.ServerNetwork()
     end
 end
 
+local sprMat = Material("sprites/light_ignorez")
+
+function projectilesystem.Draw3D()
+    for Index = 1, #ActiveProjectiles do
+        local projectile = ActiveProjectiles[Index]
+
+        cam.Start3D()
+		    render.SetMaterial(sprMat)
+		    render.DrawSprite(projectile.Pos, 32, 32, Color(255, 255, 255, 255))
+	    cam.End3D()
+    end
+end
+
+hook.Add("HUDPaint", "ProjectileSystemDraw3D", projectilesystem.Draw3D)
 net.Receive(projectilesystem.NetworkString, projectilesystem.ServerNetwork)

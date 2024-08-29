@@ -327,6 +327,15 @@ if CLIENT then
     end
 end
 
+local AutocannonProjectile = 
+{
+    dragCoef = 0.04
+}
+
+function AutocannonProjectile:OnCreated()
+    print("created", self.Pos)
+end
+
 local Autocannon =
 {
     muzzlePos = Vector(203, 4, -83),
@@ -334,7 +343,7 @@ local Autocannon =
     maxAmmo = 2000,
     defaultAmmo = 2000,
 
-    primaryFireRate = 0.5,
+    primaryFireRate = 0.25,
     secondaryFireRate = 0.1,
 
     reloadDelay = 1.2
@@ -348,19 +357,12 @@ if SERVER then
     end
     
     function Autocannon:PrimaryFire()
-        local muzzle = self:LocalToWorld(self:WeaponData("muzzlePos"))
+        local muzzlePos = self:WeaponData("muzzlePos")
+        local projectileSource = self:LocalToWorld(muzzlePos)
+        local projectileSpeed = 400
+        local projectileDir = self:GetForward()
 
-        local bulletInfo = {}
-        bulletInfo.Num = 2
-        bulletInfo.Src = muzzle
-        bulletInfo.Dir = self:GetForward()
-        bulletInfo.Spread = Vector(0, 0, 0)
-        bulletInfo.Tracer = 1
-        bulletInfo.TracerName = "ToolTracer"
-        bulletInfo.Force = 2
-        bulletInfo.Damage = 100
-
-        self:FireBullets(bulletInfo)
+        local proj = projectilesystem.CreateProjectile(self, projectileSource, projectileDir * projectileSpeed, "autocannon")
     end
 
     function Autocannon:SecondaryFire()
@@ -385,3 +387,4 @@ vehicleseat.Register("combine_heli_pilot", PilotSeat)
 helisystem.Register("combine_heli", CombineHeli)
 vehicleweapon.Register("missile_launcher", MissileLauncher)
 vehicleweapon.Register("autocannon", Autocannon)
+projectilesystem.Register("autocannon", AutocannonProjectile)
