@@ -3,14 +3,13 @@ Projectile.DragDiv = 80
 Projectile.Gravity = Vector(0, 0, -GetConVar("sv_gravity"):GetInt())
 Projectile.__index = Projectile
 
-function Projectile:New(launcher, pos, dir, projName)
+function Projectile:New(launcher, pos, vel, projName)
     self.Launcher = launcher
     self.Pos = pos
-    self.Dir = dir
+    self.Velocity = vel
     self.Name = projName
     self.Filter = EntityList(launcher, launcher:GetParent())
-    -- self.SharedRandom = pos.x + pos.y + pos.z + dir.x + dir.y + dir.z
-
+    
     self:ProjectileCall("OnCreated")
 end
 
@@ -23,7 +22,30 @@ function Projectile:ProjectileCall(fn, ...)
     projectilesystem.Call(self.Name, fn, self, ...)
 end
 
+function Projectile:GetLauncher()
+    return self.Launcher
+end
+
 function Projectile:Remove()
+    self.MarkedForRemoval = true
+end
+
+function Projectile:ImpactCheck()
+    local trace = util.TraceLine({
+        start = self.Pos,
+        endpos = self.NextPos,
+        filter = self.Filter
+    })
+
+    if trace.Hit then
+        if trace.Entity then
+            self:ProjectileCall("OnImpactEntity", trace)
+        else
+            self:ProjectileCall("OnImpactWorld", trace)
+        end
+
+        self:Remove()
+    end
 end
 
 function Projectile:Simulate()
@@ -31,20 +53,16 @@ function Projectile:Simulate()
     local gravity = self.Gravity
     local curTime = CurTime()
     local deltaTime = self.LastSimulation and (curTime - self.LastSimulation) or 0
-    local drag = self.Dir:GetNormalized() * (dragCoef * self.Dir:LengthSqr()) / self.DragDiv
-    local correction = (gravity - drag) * deltaTime
+    local drag = self.Velocity:GetNormalized() * (dragCoef * self.Velocity:LengthSqr()) / self.DragDiv
+    local correction = 0.5 * (gravity - drag) * deltaTime
 
-	self.NextPos = self.Pos + self.Dir * deltaTime + 0.5 * correction * math.sqrt(deltaTime)
-    self.NextDir = self.Dir + correction * deltaTime
+	self.NextPos = self.Pos + (self.Velocity + correction) * deltaTime
+    self.NextVelocity = self.Velocity + (gravity - drag) * deltaTime
 
-    local trace = util.TraceLine({
-        start = self.Pos,
-        endpos = self.NextPos,
-        filter = self.Filter
-    })
+    self:ImpactCheck()
 
     self.Pos = self.NextPos
-    self.Dir = self.NextDir
+    self.Velocity = self.NextVelocity
     self.LastSimulation = curTime
 end
 
@@ -52,6 +70,7 @@ end
 
 local ProjectileList = {}
 local ActiveProjectiles = {}
+local ProjectileSeed = 0
 local BaseProjectile =
 {
 }
@@ -60,6 +79,7 @@ projectilesystem = {}
 projectilesystem.NetworkString = "ProjectileSystem"
 
 PROJECTILESYSTEM_NET_CREATE = 0
+PROJECTILESYSTEM_NET_SEED = 1
 
 function projectilesystem.GetProjectileMeta()
     return Projectile
@@ -88,26 +108,38 @@ function projectilesystem.Register(name, projTbl)
     ProjectileList[name] = projTbl
 end
 
-function projectilesystem.CreateProjectile(launcher, pos, dir, projName)
+function projectilesystem.CreateProjectile(launcher, pos, vel, projName)
     if not projectilesystem.Get(projName) then return nil end
 
     if SERVER then
+        local uniqueNumber = SysTime() + engine.TickInterval()
+        local sharedSeed = util.CRC(tostring(uniqueNumber))
+        projectilesystem.SetSharedSeed(sharedSeed)
+
         net.Start(projectilesystem.NetworkString)
         net.WriteUInt(PROJECTILESYSTEM_NET_CREATE, 4)
+        net.WriteUInt(projectilesystem.GetSharedSeed(), 32)
         net.WriteEntity(launcher)
         net.WriteVector(pos)
-        net.WriteVector(dir)
+        net.WriteVector(vel)
         net.WriteString(projName)
         net.Broadcast()
     end
 
     local activeProjectile = {}
-
     setmetatable(activeProjectile, Projectile)
-    activeProjectile:New(launcher, pos, dir, projName)
+    activeProjectile:New(launcher, pos, vel, projName)
     table.insert(ActiveProjectiles, activeProjectile)
 
     return activeProjectile
+end
+
+function projectilesystem.SetSharedSeed(seed)
+    ProjectileSeed = seed
+end
+
+function projectilesystem.GetSharedSeed()
+    return ProjectileSeed
 end
 
 function projectilesystem.GetActive()
@@ -115,9 +147,14 @@ function projectilesystem.GetActive()
 end
 
 function projectilesystem.Think()
-    for Index = 1, #ActiveProjectiles do
-        local projectile = ActiveProjectiles[Index]
-        projectile:Simulate()
+    for index, projectile in pairs(ActiveProjectiles) do
+        if not projectile then continue end
+
+        if projectile.MarkedForRemoval then
+            ActiveProjectiles[index] = nil
+        else
+            projectile:Simulate()
+        end
     end
 end
 

@@ -288,11 +288,11 @@ if SERVER then
     end
 
     function MissileLauncher:Initialize()
-        self:WeaponCall("ReloadRockets", self)
+        self:WeaponCall("ReloadRockets")
     end
 
     function MissileLauncher:Reloaded()
-        self:WeaponCall("ReloadRockets", self)
+        self:WeaponCall("ReloadRockets")
     end
     
     function MissileLauncher:PrimaryFire()
@@ -329,7 +329,8 @@ end
 
 local AutocannonProjectile = 
 {
-    dragCoef = 0.04
+    dragCoef = 0.04,
+    spreadAmount = 10
 }
 
 function AutocannonProjectile:OnCreated()
@@ -359,10 +360,11 @@ if SERVER then
     function Autocannon:PrimaryFire()
         local muzzlePos = self:WeaponData("muzzlePos")
         local projectileSource = self:LocalToWorld(muzzlePos)
-        local projectileSpeed = 400
+        local projectileSpeed = 6000
         local projectileDir = self:GetForward()
 
         local proj = projectilesystem.CreateProjectile(self, projectileSource, projectileDir * projectileSpeed, "autocannon")
+        self:EmitSound("NPC_Combine_Cannon.FireBullet")
     end
 
     function Autocannon:SecondaryFire()

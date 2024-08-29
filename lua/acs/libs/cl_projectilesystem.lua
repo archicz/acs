@@ -8,11 +8,13 @@ function projectilesystem.ServerNetwork()
     local stateHandlers =
     {
         [PROJECTILESYSTEM_NET_CREATE] = function()
+            local sharedSeed = net.ReadUInt(32)
             local launcher = net.ReadEntity()
             local pos = net.ReadVector()
             local dir = net.ReadVector()
             local projName = net.ReadString()
-
+            
+            projectilesystem.SetSharedSeed(sharedSeed)
             projectilesystem.CreateProjectile(launcher, pos, dir, projName)
         end
     }
@@ -26,8 +28,8 @@ end
 local sprMat = Material("sprites/light_ignorez")
 
 function projectilesystem.Draw3D()
-    for Index = 1, #ActiveProjectiles do
-        local projectile = ActiveProjectiles[Index]
+    for index, projectile in pairs(ActiveProjectiles) do
+        if not projectile then continue end
 
         cam.Start3D()
 		    render.SetMaterial(sprMat)
