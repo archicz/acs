@@ -32,6 +32,6 @@ function ENT:OnRemove()
         self.MissileSound:Stop()
 
         self.MissilePropellerParticle:StopEmission(false, true)
-        self.MissileTrailParticle:StopEmission(false, true)
+        self.MissileTrailParticle:StopEmission(false, false)
     end
 end
