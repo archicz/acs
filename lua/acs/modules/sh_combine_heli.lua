@@ -337,6 +337,17 @@ function AutocannonProjectile:OnCreated()
     print("created", self.Pos)
 end
 
+if SERVER then
+    function AutocannonProjectile:OnImpactWorld(trace)
+        print("impact world")
+        local effectdata = EffectData()
+        effectdata:SetOrigin(trace.HitPos)
+        effectdata:SetScale(100)
+        effectdata:SetMagnitude(800)
+        util.Effect("Explosion", effectdata)
+    end
+end
+
 local Autocannon =
 {
     muzzlePos = Vector(203, 4, -83),
@@ -359,12 +370,15 @@ if SERVER then
     
     function Autocannon:PrimaryFire()
         local muzzlePos = self:WeaponData("muzzlePos")
-        local projectileSource = self:LocalToWorld(muzzlePos)
-        local projectileSpeed = 6000
         local projectileDir = self:GetForward()
+        local projectileSpeed = 6000
+        local projectileSpread = Angle(1, 1, 0)
+        local projectileVelocity = projectilesystem.MakeVelocity(projectileDir, projectileSpeed, projectileSpread)
 
-        local proj = projectilesystem.CreateProjectile(self, projectileSource, projectileDir * projectileSpeed, "autocannon")
-        self:EmitSound("NPC_Combine_Cannon.FireBullet")
+        print(projectileDir * projectileSpeed, "vs", projectileVelocity)
+
+        local proj = projectilesystem.CreateProjectile(self, muzzlePos, projectileVelocity, "autocannon")
+        self:EmitSound("Weapon_AR2.Single")
     end
 
     function Autocannon:SecondaryFire()

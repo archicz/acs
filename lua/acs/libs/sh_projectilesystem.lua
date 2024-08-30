@@ -1,15 +1,26 @@
+local ProjectileList = {}
+local ActiveProjectiles = {}
+local BaseProjectile =
+{
+}
+
+projectilesystem = {}
+projectilesystem.NetworkString = "ProjectileSystem"
+
+PROJECTILESYSTEM_NET_CREATE = 0
+
 local Projectile = {}
 Projectile.DragDiv = 80
 Projectile.Gravity = Vector(0, 0, -GetConVar("sv_gravity"):GetInt())
 Projectile.__index = Projectile
 
-function Projectile:New(launcher, pos, vel, projName)
+function Projectile:New(launcher, localPos, vel, projName)
     self.Launcher = launcher
-    self.Pos = pos
+    self.Pos = launcher:LocalToWorld(localPos)
     self.Velocity = vel
     self.Name = projName
     self.Filter = EntityList(launcher, launcher:GetParent())
-    
+
     self:ProjectileCall("OnCreated")
 end
 
@@ -38,10 +49,14 @@ function Projectile:ImpactCheck()
     })
 
     if trace.Hit then
-        if trace.Entity then
-            self:ProjectileCall("OnImpactEntity", trace)
-        else
+        print(trace.Entity)
+
+        if trace.HitWorld then
             self:ProjectileCall("OnImpactWorld", trace)
+            print("hit world")
+        elseif IsValid(trace.Entity) then
+            self:ProjectileCall("OnImpactEntity", trace)
+            print("hit entity")
         end
 
         self:Remove()
@@ -67,19 +82,6 @@ function Projectile:Simulate()
 end
 
 
-
-local ProjectileList = {}
-local ActiveProjectiles = {}
-local ProjectileSeed = 0
-local BaseProjectile =
-{
-}
-
-projectilesystem = {}
-projectilesystem.NetworkString = "ProjectileSystem"
-
-PROJECTILESYSTEM_NET_CREATE = 0
-PROJECTILESYSTEM_NET_SEED = 1
 
 function projectilesystem.GetProjectileMeta()
     return Projectile
@@ -108,19 +110,14 @@ function projectilesystem.Register(name, projTbl)
     ProjectileList[name] = projTbl
 end
 
-function projectilesystem.CreateProjectile(launcher, pos, vel, projName)
+function projectilesystem.CreateProjectile(launcher, localPos, vel, projName)
     if not projectilesystem.Get(projName) then return nil end
 
     if SERVER then
-        local uniqueNumber = SysTime() + engine.TickInterval()
-        local sharedSeed = util.CRC(tostring(uniqueNumber))
-        projectilesystem.SetSharedSeed(sharedSeed)
-
         net.Start(projectilesystem.NetworkString)
         net.WriteUInt(PROJECTILESYSTEM_NET_CREATE, 4)
-        net.WriteUInt(projectilesystem.GetSharedSeed(), 32)
         net.WriteEntity(launcher)
-        net.WriteVector(pos)
+        net.WriteVector(localPos)
         net.WriteVector(vel)
         net.WriteString(projName)
         net.Broadcast()
@@ -128,18 +125,10 @@ function projectilesystem.CreateProjectile(launcher, pos, vel, projName)
 
     local activeProjectile = {}
     setmetatable(activeProjectile, Projectile)
-    activeProjectile:New(launcher, pos, vel, projName)
+    activeProjectile:New(launcher, localPos, vel, projName)
     table.insert(ActiveProjectiles, activeProjectile)
 
     return activeProjectile
-end
-
-function projectilesystem.SetSharedSeed(seed)
-    ProjectileSeed = seed
-end
-
-function projectilesystem.GetSharedSeed()
-    return ProjectileSeed
 end
 
 function projectilesystem.GetActive()

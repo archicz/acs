@@ -8,14 +8,12 @@ function projectilesystem.ServerNetwork()
     local stateHandlers =
     {
         [PROJECTILESYSTEM_NET_CREATE] = function()
-            local sharedSeed = net.ReadUInt(32)
             local launcher = net.ReadEntity()
-            local pos = net.ReadVector()
+            local localPos = net.ReadVector()
             local dir = net.ReadVector()
             local projName = net.ReadString()
             
-            projectilesystem.SetSharedSeed(sharedSeed)
-            projectilesystem.CreateProjectile(launcher, pos, dir, projName)
+            projectilesystem.CreateProjectile(launcher, localPos, dir, projName)
         end
     }
 
@@ -25,7 +23,7 @@ function projectilesystem.ServerNetwork()
     end
 end
 
-local sprMat = Material("sprites/light_ignorez")
+local sprMat = Material("sprites/orangecore1")
 
 function projectilesystem.Draw3D()
     for index, projectile in pairs(ActiveProjectiles) do
