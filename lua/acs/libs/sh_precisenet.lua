@@ -1,15 +1,15 @@
 if not net then return end
 
 function net.WritePreciseVector(vec)
-    net.WriteDouble(vec.x)
-    net.WriteDouble(vec.y)
-    net.WriteDouble(vec.z)
+    net.WriteFloat(vec.x)
+    net.WriteFloat(vec.y)
+    net.WriteFloat(vec.z)
 end
 
 function net.ReadPreciseVector()
-    local x = net.ReadDouble()
-    local y = net.ReadDouble()
-    local z = net.ReadDouble()
+    local x = net.ReadFloat()
+    local y = net.ReadFloat()
+    local z = net.ReadFloat()
 
     return Vector(x, y, z)
 end

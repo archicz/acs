@@ -25,6 +25,7 @@ SharedScript("libs/sh_analogmapper.lua")
 
 SharedScript("libs/sh_json.lua")
 SharedScript("libs/sh_wavfile.lua")
+SharedScript("libs/sh_precisenet.lua")
 ClientsideScript("libs/cl_soundreverse.lua")
 ClientsideScript("libs/cl_3dui.lua")
 ClientsideScript("libs/cl_bloomrt.lua")
