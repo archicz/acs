@@ -5,7 +5,7 @@ include("shared.lua")
 function ENT:Initialize()
 	self:SetMoveType(MOVETYPE_NONE)
 	self:SetSolid(SOLID_NONE)
-    self:WeaponCall("Initialize", self)
+    self:WeaponCall("Initialize")
 end
 
 function ENT:WeaponSetup(wpnName)
@@ -40,19 +40,19 @@ function ENT:WeaponReload()
 end
 
 function ENT:WeaponReloading()
-    self:WeaponCall("Reloading", self)
+    self:WeaponCall("Reloading")
     return true
 end
 
 function ENT:WeaponReloaded()
-    self:WeaponCall("Reloaded", self)
+    self:WeaponCall("Reloaded")
     return true
 end
 
 function ENT:WeaponPrimaryFire()
     local nextPrimary = self:GetNextPrimaryFire()
     if CurTime() >= nextPrimary then
-        self:WeaponCall("PrimaryFire", self)
+        self:WeaponCall("PrimaryFire")
 
         self:SetNextPrimaryFire(CurTime() + self:WeaponData("primaryFireRate"))
         return true
@@ -64,7 +64,7 @@ end
 function ENT:WeaponSecondaryFire()
     local nextSecondary = self:GetNextSecondaryFire()
     if CurTime() >= nextSecondary then
-        self:WeaponCall("SecondaryFire", self)
+        self:WeaponCall("SecondaryFire")
 
         self:SetNextSecondaryFire(CurTime() + self:WeaponData("secondaryFireRate"))
         return true
@@ -74,7 +74,7 @@ function ENT:WeaponSecondaryFire()
 end
 
 function ENT:Think()
-    self:WeaponCall("Think", self)
+    self:WeaponCall("Think")
 
     if self:GetIsReloading() then
         local reloadTime = self:GetReloadTime()
@@ -89,5 +89,5 @@ function ENT:Think()
 end
 
 function ENT:OnRemove()
-    self:WeaponCall("OnRemove", self)
+    self:WeaponCall("OnRemove")
 end

@@ -7,31 +7,31 @@ function ENT:Initialize()
     if not pacOutfit then return end
 
     self:AttachPACPart(pacOutfit)
-    self:WeaponCall("Initialize", self)
+    self:WeaponCall("Initialize")
 end
 
 function ENT:WeaponReloading()
-    self:WeaponCall("Reloading", self)
+    self:WeaponCall("Reloading")
 end
 
 function ENT:WeaponReloaded()
-    self:WeaponCall("Reloaded", self)
+    self:WeaponCall("Reloaded")
 end
 
 function ENT:WeaponPrimaryFire()
-    self:WeaponCall("PrimaryFire", self)
+    self:WeaponCall("PrimaryFire")
 end
 
 function ENT:WeaponSecondaryFire()
-    self:WeaponCall("SecondaryFire", self)
+    self:WeaponCall("SecondaryFire")
 end
 
 function ENT:Think()
-    self:WeaponCall("Think", self)
+    self:WeaponCall("Think")
 end
 
 function ENT:Draw()
-    self:WeaponCall("Draw", self)
+    self:WeaponCall("Draw")
 end
 
 function ENT:OnRemove()
@@ -39,5 +39,5 @@ function ENT:OnRemove()
     if not pacOutfit then return end
 
     self:RemovePACPart(pacOutfit)
-    self:WeaponCall("OnRemove", self)
+    self:WeaponCall("OnRemove")
 end

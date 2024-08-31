@@ -166,10 +166,16 @@ function vehicleweapon.SeatEnter(seatEnt, ply)
 
     if not vehicleseat.HasWeapons(seatEnt) then return end
     local wps = vehicleseat.GetWeapons(seatEnt)
+    local index = vehicleseat.GetSelectedWeaponIndex(seatEnt)
 
     net.Start(vehicleweapon.NetworkString)
     net.WriteUInt(VEHICLEWEAPON_NET_WEAPONLIST, 4)
     net.WriteTable(wps, true)
+    net.Send(ply)
+
+    net.Start(vehicleweapon.NetworkString)
+    net.WriteUInt(VEHICLEWEAPON_NET_SELECT, 4)
+    net.WriteUInt(index, 32)
     net.Send(ply)
 end
 

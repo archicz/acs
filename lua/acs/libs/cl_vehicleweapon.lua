@@ -12,12 +12,12 @@ end
 function vehicleseat.GetSelectedWeapon()
     if not vehicleseat.HasWeapons() then return nil end
     
-    local index = vehicleseat.GetSelectedWeaponIndex()
-    return Weapons[index]
+    return Weapons[SelectedWeapon]
 end
 
 function vehicleseat.GetSelectedWeaponIndex()
     if not vehicleseat.HasWeapons() then return nil end
+
     return SelectedWeapon
 end
 
