@@ -37,8 +37,17 @@ function Projectile:GetLauncher()
     return self.Launcher
 end
 
+function Projectile:GetPos()
+    return self.Pos
+end
+
 function Projectile:Remove()
     self.MarkedForRemoval = true
+    self:ProjectileCall("OnRemove")
+end
+
+function Projectile:IsRemoved()
+    return self.MarkedForRemoval or false
 end
 
 function Projectile:ImpactCheck()
@@ -49,8 +58,6 @@ function Projectile:ImpactCheck()
     })
 
     if trace.Hit then
-        print(trace.Entity)
-
         if trace.HitWorld then
             self:ProjectileCall("OnImpactWorld", trace)
             print("hit world")
@@ -117,8 +124,8 @@ function projectilesystem.CreateProjectile(launcher, localPos, vel, projName)
         net.Start(projectilesystem.NetworkString)
         net.WriteUInt(PROJECTILESYSTEM_NET_CREATE, 4)
         net.WriteEntity(launcher)
-        net.WriteVector(localPos)
-        net.WriteVector(vel)
+        net.WritePreciseVector(localPos)
+        net.WritePreciseVector(vel)
         net.WriteString(projName)
         net.Broadcast()
     end
@@ -139,11 +146,12 @@ function projectilesystem.Think()
     for index, projectile in pairs(ActiveProjectiles) do
         if not projectile then continue end
 
-        if projectile.MarkedForRemoval then
+        if projectile:IsRemoved() then
             ActiveProjectiles[index] = nil
-        else
-            projectile:Simulate()
+            continue
         end
+
+        projectile:Simulate()
     end
 end
 

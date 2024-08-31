@@ -329,17 +329,37 @@ end
 
 local AutocannonProjectile = 
 {
-    dragCoef = 0.04,
-    spreadAmount = 10
+    dragCoef = 0.04
 }
 
-function AutocannonProjectile:OnCreated()
-    print("created", self.Pos)
+if CLIENT then
+    function AutocannonProjectile:OnCreated()
+        self.ParticleEmitter = ParticleEmitter(self:GetPos())
+    end
+
+    function AutocannonProjectile:OnRemove()
+        if self.ParticleEmitter then
+            self.ParticleEmitter:Finish()
+        end
+    end
+
+    function AutocannonProjectile:Draw() 
+        local particle = self.ParticleEmitter:Add("effects/spark", self:GetPos())
+        if particle then
+            particle:SetDieTime(1)
+    
+            particle:SetStartAlpha(255)
+            particle:SetEndAlpha(0)
+    
+            particle:SetStartSize(5)
+            particle:SetEndSize(0)
+            particle:SetVelocity(VectorRand() * 50)
+        end
+    end
 end
 
 if SERVER then
     function AutocannonProjectile:OnImpactWorld(trace)
-        print("impact world")
         local effectdata = EffectData()
         effectdata:SetOrigin(trace.HitPos)
         effectdata:SetScale(100)
@@ -355,7 +375,7 @@ local Autocannon =
     maxAmmo = 2000,
     defaultAmmo = 2000,
 
-    primaryFireRate = 0.25,
+    primaryFireRate = 0.075,
     secondaryFireRate = 0.1,
 
     reloadDelay = 1.2
@@ -371,11 +391,9 @@ if SERVER then
     function Autocannon:PrimaryFire()
         local muzzlePos = self:WeaponData("muzzlePos")
         local projectileDir = self:GetForward()
-        local projectileSpeed = 6000
+        local projectileSpeed = 19000
         local projectileSpread = Angle(1, 1, 0)
         local projectileVelocity = projectilesystem.MakeVelocity(projectileDir, projectileSpeed, projectileSpread)
-
-        print(projectileDir * projectileSpeed, "vs", projectileVelocity)
 
         local proj = projectilesystem.CreateProjectile(self, muzzlePos, projectileVelocity, "autocannon")
         self:EmitSound("Weapon_AR2.Single")

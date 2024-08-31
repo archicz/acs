@@ -3,14 +3,20 @@ if not projectilesystem then return end
 local ActiveProjectiles = projectilesystem.GetActive()
 local Projectile = projectilesystem.GetProjectileMeta()
 
+function Projectile:Draw()
+    self:ProjectileCall("Draw")
+end
+
+
+
 function projectilesystem.ServerNetwork()
     local state = net.ReadUInt(4)
     local stateHandlers =
     {
         [PROJECTILESYSTEM_NET_CREATE] = function()
             local launcher = net.ReadEntity()
-            local localPos = net.ReadVector()
-            local dir = net.ReadVector()
+            local localPos = net.ReadPreciseVector()
+            local dir = net.ReadPreciseVector()
             local projName = net.ReadString()
             
             projectilesystem.CreateProjectile(launcher, localPos, dir, projName)
@@ -23,18 +29,14 @@ function projectilesystem.ServerNetwork()
     end
 end
 
-local sprMat = Material("sprites/orangecore1")
-
-function projectilesystem.Draw3D()
+function projectilesystem.Draw()
     for index, projectile in pairs(ActiveProjectiles) do
         if not projectile then continue end
+        if projectile:IsRemoved() then continue end
 
-        cam.Start3D()
-		    render.SetMaterial(sprMat)
-		    render.DrawSprite(projectile.Pos, 32, 32, Color(255, 255, 255, 255))
-	    cam.End3D()
+        projectile:Draw()
     end
 end
 
-hook.Add("HUDPaint", "ProjectileSystemDraw3D", projectilesystem.Draw3D)
+hook.Add("PostDrawEffects", "ProjectileSystemDraw", projectilesystem.Draw)
 net.Receive(projectilesystem.NetworkString, projectilesystem.ServerNetwork)
