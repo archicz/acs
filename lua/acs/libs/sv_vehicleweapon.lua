@@ -47,6 +47,19 @@ function vehicleseat.HasWeapons(seatEnt)
     return true
 end
 
+function vehicleseat.ControlWeapon(seatEnt, cmd)
+    if not IsValid(seatEnt) then return end
+
+    local wpnEnt = vehicleseat.GetSelectedWeapon(seatEnt)
+    if not IsValid(wpnEnt) then return end
+
+    if cmd:KeyDown(IN_ATTACK) then
+        vehicleweapon.DoAction(wpnEnt, VEHICLEWEAPON_ACTION_PRIMARY)
+    elseif cmd:KeyDown(IN_ATTACK2) then
+        vehicleweapon.DoAction(wpnEnt, VEHICLEWEAPON_ACTION_SECONDARY)
+    end
+end
+
 
 
 function vehicleweapon.CreateWeapon(baseEnt, seatEnt, wpnName)
@@ -115,20 +128,6 @@ function vehicleweapon.DoAction(wpnEnt, action)
     end
 end
 
-function vehicleweapon.ControlWeapon(seatEnt, ply, cmd)
-    if not IsValid(seatEnt) then return end
-    if not IsValid(ply) then return end
-
-    local wpnEnt = vehicleseat.GetSelectedWeapon(seatEnt)
-    if not IsValid(wpnEnt) then return end
-
-    if cmd:KeyDown(IN_ATTACK) then
-        vehicleweapon.DoAction(wpnEnt, VEHICLEWEAPON_ACTION_PRIMARY)
-    elseif cmd:KeyDown(IN_ATTACK2) then
-        vehicleweapon.DoAction(wpnEnt, VEHICLEWEAPON_ACTION_SECONDARY)
-    end
-end
-
 function vehicleweapon.ClientNetwork(_, ply)
     local seatEnt = ply:GetVehicleSeat()
     if not IsValid(seatEnt) then return end
@@ -140,7 +139,10 @@ function vehicleweapon.ClientNetwork(_, ply)
             local index = net.ReadUInt(32)
             if not vehicleseat.HasWeapons(seatEnt) then return end
 
-            vehicleseat.SelectWeapon(seatEnt, index)
+            if universaltimeout.Check(seatEnt, "weaponSelect") then
+                vehicleseat.SelectWeapon(seatEnt, index)
+                universaltimeout.Attach(seatEnt, "weaponSelect", 0.5)
+            end
         end,
 
         [VEHICLEWEAPON_NET_ACTION] = function()
@@ -167,10 +169,10 @@ function vehicleweapon.SeatEnter(seatEnt, ply)
     if not vehicleseat.HasWeapons(seatEnt) then return end
     local wps = vehicleseat.GetWeapons(seatEnt)
     local index = vehicleseat.GetSelectedWeaponIndex(seatEnt)
-
+    
     net.Start(vehicleweapon.NetworkString)
     net.WriteUInt(VEHICLEWEAPON_NET_WEAPONLIST, 4)
-    net.WriteTable(wps, true)
+    net.WriteEntityList(wps)
     net.Send(ply)
 
     net.Start(vehicleweapon.NetworkString)

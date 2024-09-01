@@ -4,7 +4,7 @@ local Weapons = {}
 local SelectedWeapon = 1
 
 function vehicleseat.GetWeapons()
-    if not vehicleseat.ValidSeat() then return nil end
+    if not vehicleseat.IsValid() then return nil end
 
     return Weapons
 end
@@ -74,7 +74,7 @@ function vehicleweapon.ServerNetwork()
     local stateHandlers =
     {
         [VEHICLEWEAPON_NET_WEAPONLIST] = function()
-            Weapons = net.ReadTable()
+            Weapons = net.ReadEntityList()
         end,
 
         [VEHICLEWEAPON_NET_SELECT] = function()

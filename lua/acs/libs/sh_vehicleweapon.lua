@@ -1,6 +1,7 @@
 local WeaponList = {}
 local BaseWeapon =
 {
+    printName = "Vehicle Weapon"
 }
 
 vehicleweapon = {}
