@@ -60,7 +60,19 @@ function vehicleseat.StartCommand(ply, cmd)
     local seatName = seatEnt:GetSeatName()
     if not seatName then return end
 
-    vehicleseat.Call(seatName, "StartCommand", seatEnt, ply, cmd)
+    vehicleseat.Call(seatName, "StartCommand", seatEnt, cmd)
+end
+
+function vehicleseat.PlayerButtonDown(ply, button)
+    if not IsValid(ply) then return end
+
+    local seatEnt = ply:GetVehicleSeat()
+    if not IsValid(seatEnt) then return end
+
+    local seatName = seatEnt:GetSeatName()
+    if not seatName then return end
+
+    vehicleseat.Call(seatName, "ButtonPressed", seatEnt, button)
 end
 
 function vehicleseat.ClientNetwork(_, ply)
@@ -86,6 +98,7 @@ function vehicleseat.ClientNetwork(_, ply)
 end
 
 hook.Add("StartCommand", "VehicleSeatControls", vehicleseat.StartCommand)
+hook.Add("PlayerButtonDown", "VehicleSeatControl+", vehicleseat.PlayerButtonDown)
 net.Receive(vehicleseat.NetworkString, vehicleseat.ClientNetwork)
 
 local PlyMeta = FindMetaTable("Player")

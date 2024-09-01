@@ -1,52 +1,112 @@
 if not vehicleseat then return end
-vehicleseat.ActiveSeat = nil
-vehicleseat.ActiveSeatName = nil
+local ActiveSeat = false
+local ActiveSeatName = false
 
-local entranceEyePos = EyePos()
-local entranceEyeAng = EyeAngles()
-local entranceAnimEnd = 0
+local EntranceEyePos = EyePos()
+local EntranceEyeAng = EyeAngles()
+local EntranceAnimEnd = 0
 
 local m_yaw = GetConVar("m_yaw")
 local m_pitch = GetConVar("m_pitch")
-local freelookEnabled = false
-local freelookPitch = 0
-local freelookYaw = 0
+local FreelookEnabled = false
+local FreelookKey = IN_WALK
+local FreelookPitch = 0
+local FreelookYaw = 0
 
-function vehicleseat.HUDPaint()
-    local seatEnt = vehicleseat.ActiveSeat
-    if not IsValid(seatEnt) then return end
+function vehicleseat.IsValid()
+    local seatEnt = ActiveSeat
+    if not IsValid(seatEnt) then return false end
 
-    local seatName = vehicleseat.ActiveSeatName
-    if not seatName then return end
+    local seatName = ActiveSeatName
+    if not seatName then return false end
 
-    return vehicleseat.Call(seatName, "HUDPaint", seatEnt)
+    return true
 end
 
-function vehicleseat.PostProcess()
-    local seatEnt = vehicleseat.ActiveSeat
-    if not IsValid(seatEnt) then return end
-
-    local seatName = vehicleseat.ActiveSeatName
+function vehicleseat.CanFreelook()
+    local seatName = ActiveSeatName
     if not seatName then return end
 
-    return vehicleseat.Call(seatName, "RenderScreenspaceEffects", seatEnt)
+    local seatTbl = vehicleseat.Get(seatName)
+    if not seatTbl then return end
+
+    if seatTbl.animatedEntrance then
+        return (CurTime() > EntranceAnimEnd)
+    end
+
+    return true
 end
 
-function vehicleseat.HUDPaint3D()
-    local seatEnt = vehicleseat.ActiveSeat
-    if not IsValid(seatEnt) then return end
+function vehicleseat.GetFreelookAngles()
+    return Angle(FreelookPitch, FreelookYaw, 0)
+end
 
-    local seatName = vehicleseat.ActiveSeatName
+function vehicleseat.GetLookPos()
+    local seatName = ActiveSeatName
     if not seatName then return end
 
-    return vehicleseat.Call(seatName, "PostDrawOpaqueRenderables", seatEnt)
+    local seatTbl = vehicleseat.Get(seatName)
+    if not seatTbl then return end
+    
+    return seatTbl.viewPos
+end
+
+function vehicleseat.IsFreelooking()
+    return FreelookEnabled
+end
+
+function vehicleseat.NotifyFreelook()
+    net.Start(vehicleseat.NetworkString)
+    net.WriteUInt(VEHICLESEAT_NET_FREELOOK, 4)
+    net.WriteBit(FreelookEnabled)
+    net.SendToServer()
+end
+
+function vehicleseat.OnSeatEnter(seatEnt, name)
+    local seatTbl = vehicleseat.Get(name)
+    if not seatTbl then return end
+
+    if seatTbl.animatedEntrance then
+        EntranceEyePos = EyePos()
+        EntranceEyeAng = EyeAngles()
+        EntranceAnimEnd = CurTime() + seatTbl.entranceDuration
+    end
+
+    if seatTbl.freelook then
+        FreelookPitch = 0
+        FreelookYaw = 0
+        FreelookEnabled = false
+    end
+    
+    vehicleseat.Call(name, "OnEnter", seat)
+    ActiveSeat = seatEnt
+    ActiveSeatName = name
+end
+
+function vehicleseat.OnSeatExit()
+    local seatName = ActiveSeatName
+    if not seatName then return end
+
+    vehicleseat.Call(seatName, "OnExit")
+    ActiveSeat = false
+    ActiveSeatName = false
+end
+
+function vehicleseat.Draw()
+    local seatEnt = ActiveSeat
+    if not IsValid(seatEnt) then return end
+
+    local seatName = ActiveSeatName
+    if not seatName then return end
+
+    return vehicleseat.Call(seatName, "Draw", seatEnt)
 end
 
 function vehicleseat.CalcView(_, pos, angles, fov)
-    local seatEnt = vehicleseat.ActiveSeat
+    local seatEnt = ActiveSeat
     if not IsValid(seatEnt) then return end
 
-    local seatName = vehicleseat.ActiveSeatName
+    local seatName = ActiveSeatName
     if not seatName then return end
     
     local seatTbl = vehicleseat.Get(seatName)
@@ -55,12 +115,12 @@ function vehicleseat.CalcView(_, pos, angles, fov)
     local viewPos = seatEnt:LocalToWorld(seatTbl.viewPos)
     local viewAng = seatEnt:LocalToWorldAngles(seatTbl.viewAng + vehicleseat.GetFreelookAngles())
 
-    if seatTbl.animatedEntrance and CurTime() < entranceAnimEnd then
-        local endDelta = entranceAnimEnd - CurTime()
+    if seatTbl.animatedEntrance and CurTime() < EntranceAnimEnd then
+        local endDelta = EntranceAnimEnd - CurTime()
         local frac = 1 - math.Clamp(endDelta / seatTbl.entranceDuration, 0, 1)
 
-        viewPos = LerpVector(frac, entranceEyePos, viewPos)
-        viewAng = LerpAngle(frac, entranceEyeAng, viewAng)
+        viewPos = LerpVector(frac, EntranceEyePos, viewPos)
+        viewAng = LerpAngle(frac, EntranceEyeAng, viewAng)
     end
 
     local view =
@@ -76,30 +136,30 @@ function vehicleseat.CalcView(_, pos, angles, fov)
 end
 
 function vehicleseat.CreateMove(cmd)
-    local seatEnt = vehicleseat.ActiveSeat
+    local seatEnt = ActiveSeat
     if not IsValid(seatEnt) then return end
 
-    local seatName = vehicleseat.ActiveSeatName
+    local seatName = ActiveSeatName
     if not seatName then return end
 
     local seatTbl = vehicleseat.Get(seatName)
     if not seatTbl then return end
 
     if seatTbl.freelook and vehicleseat.CanFreelook() then
-        local oldFreelookEnabled = freelookEnabled
+        local oldFreelookEnabled = FreelookEnabled
         local newFreelookEnabled = false
 
-        if not seatTbl.freelookKey or (seatTbl.freelookKey and cmd:KeyDown(vehicleseat.FreelookKey)) then
-            freelookPitch = math.Clamp(freelookPitch + m_pitch:GetFloat() * cmd:GetMouseY(), seatTbl.freelookPitchMix, seatTbl.freelookPitchMax)
-            freelookYaw = math.Clamp(freelookYaw - m_yaw:GetFloat() * cmd:GetMouseX(), seatTbl.freelookYawMin, seatTbl.freelookYawMax)
+        if not seatTbl.freelookKey or (seatTbl.freelookKey and cmd:KeyDown(FreelookKey)) then
+            FreelookPitch = math.Clamp(FreelookPitch + m_pitch:GetFloat() * cmd:GetMouseY(), seatTbl.freelookPitchMix, seatTbl.freelookPitchMax)
+            FreelookYaw = math.Clamp(FreelookYaw - m_yaw:GetFloat() * cmd:GetMouseX(), seatTbl.freelookYawMin, seatTbl.freelookYawMax)
             newFreelookEnabled = true
         else
-            freelookPitch = Lerp(FrameTime() * 5, freelookPitch, 0)
-            freelookYaw = Lerp(FrameTime() * 5, freelookYaw, 0)
+            FreelookPitch = Lerp(FrameTime() * 5, FreelookPitch, 0)
+            FreelookYaw = Lerp(FrameTime() * 5, FreelookYaw, 0)
             newFreelookEnabled = false
         end
 
-        freelookEnabled = newFreelookEnabled
+        FreelookEnabled = newFreelookEnabled
 
         if oldFreelookEnabled != newFreelookEnabled then
             vehicleseat.NotifyFreelook()
@@ -109,73 +169,24 @@ function vehicleseat.CreateMove(cmd)
     return vehicleseat.Call(seatName, "CreateMove", seatEnt, cmd)
 end
 
-function vehicleseat.CanFreelook()
-    local seatName = vehicleseat.ActiveSeatName
+function vehicleseat.PlayerButtonDown(ply, button)
+    local seatEnt = ActiveSeat
+    if not IsValid(seatEnt) then return end
+
+    local seatName = ActiveSeatName
     if not seatName then return end
 
-    local seatTbl = vehicleseat.Get(seatName)
-    if not seatTbl then return end
-
-    if seatTbl.animatedEntrance then
-        return (CurTime() > entranceAnimEnd)
-    end
-
-    return true
+    return vehicleseat.Call(seatName, "ButtonPressed", seatEnt, button)
 end
 
-function vehicleseat.GetFreelookAngles()
-    return Angle(freelookPitch, freelookYaw, 0)
-end
+function vehicleseat.Think()
+    local seatEnt = ActiveSeat
+    if not IsValid(seatEnt) then return end
 
-function vehicleseat.GetLookPos()
-    local seatName = vehicleseat.ActiveSeatName
+    local seatName = ActiveSeatName
     if not seatName then return end
 
-    local seatTbl = vehicleseat.Get(seatName)
-    if not seatTbl then return end
-    
-    return seatTbl.viewPos
-end
-
-function vehicleseat.IsFreelooking()
-    return freelookEnabled
-end
-
-function vehicleseat.NotifyFreelook()
-    net.Start(vehicleseat.NetworkString)
-    net.WriteUInt(VEHICLESEAT_NET_FREELOOK, 4)
-    net.WriteBit(freelookEnabled)
-    net.SendToServer()
-end
-
-function vehicleseat.OnSeatEnter(seatEnt, name)
-    local seatTbl = vehicleseat.Get(name)
-    if not seatTbl then return end
-
-    if seatTbl.animatedEntrance then
-        entranceEyePos = EyePos()
-        entranceEyeAng = EyeAngles()
-        entranceAnimEnd = CurTime() + seatTbl.entranceDuration
-    end
-
-    if seatTbl.freelook then
-        freelookPitch = 0
-        freelookYaw = 0
-        freelookEnabled = false
-    end
-    
-    vehicleseat.Call(name, "OnEnter", seat)
-    vehicleseat.ActiveSeat = seatEnt
-    vehicleseat.ActiveSeatName = name
-end
-
-function vehicleseat.OnSeatExit()
-    local seatName = vehicleseat.ActiveSeatName
-    if not seatName then return end
-
-    vehicleseat.Call(seatName, "OnExit")
-    vehicleseat.ActiveSeat = nil
-    vehicleseat.ActiveSeatName = nil
+    vehicleseat.Call(seatName, "Think", seatEnt)
 end
 
 function vehicleseat.ServerNetwork()
@@ -201,9 +212,9 @@ function vehicleseat.ServerNetwork()
     end
 end
 
-hook.Add("HUDPaint", "VehicleSeatHUD", vehicleseat.HUDPaint)
-hook.Add("RenderScreenspaceEffects", "VehicleSeatPP", vehicleseat.PostProcess)
-hook.Add("PostDrawOpaqueRenderables", "VehicleSeatHUD3D", vehicleseat.HUDPaint3D)
+hook.Add("PostDrawOpaqueRenderables", "VehicleSeatDraw", vehicleseat.Draw)
 hook.Add("CalcView", "VehicleSeatView", vehicleseat.CalcView)
 hook.Add("CreateMove", "VehicleSeatControl", vehicleseat.CreateMove)
+hook.Add("PlayerButtonDown", "VehicleSeatControl+", vehicleseat.PlayerButtonDown)
+hook.Add("Think", "VehicleSeatThink", vehicleseat.Think)
 net.Receive(vehicleseat.NetworkString, vehicleseat.ServerNetwork)
