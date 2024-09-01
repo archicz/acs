@@ -2,6 +2,7 @@ local ProjectileList = {}
 local ActiveProjectiles = {}
 local BaseProjectile =
 {
+    dragCoef = 0.04
 }
 
 projectilesystem = {}
@@ -39,6 +40,10 @@ end
 
 function Projectile:GetPos()
     return self.Pos
+end
+
+function Projectile:GetVelocity()
+    return self.Velocity
 end
 
 function Projectile:Remove()
