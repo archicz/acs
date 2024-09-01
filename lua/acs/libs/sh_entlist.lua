@@ -122,3 +122,33 @@ function EntityList(...)
 
     return instance
 end
+
+if not net then return end
+
+function net.WriteEntityList(entList)
+    net.WriteUInt(#entList, 32)
+
+    for i, ent in pairs(entList) do
+        if not ent then continue end
+        if not IsValid(ent) then continue end
+
+        net.WriteUInt(ent:EntIndex(), 32)
+    end
+end
+
+function net.ReadEntityList()
+    local num = net.ReadUInt(32)
+    local entList = EntityList()
+
+    for i = 1, num do
+        local entIndex = net.ReadUInt(32)
+        local ent = Entity(entIndex)
+
+        if not ent then continue end
+        if not IsValid(ent) then continue end
+
+        entList:AddEntity(ent)
+    end
+
+    return entList
+end
