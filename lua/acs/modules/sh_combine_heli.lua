@@ -19,23 +19,32 @@ local PilotSeat =
 }
 
 if CLIENT then
-    function PilotSeat.HUDPaint(seatEnt)
+    function PilotSeat:ButtonPressed(button)
+        if not vehicleseat.HasWeapons() then return end
+        local wps = vehicleseat.GetWeapons()
+        local selectedIndex = vehicleseat.GetSelectedWeaponIndex()
+
+        for key = KEY_1, (KEY_9 - KEY_1) do
+            local index = key - 1
+
+            if button == key and index != selectedIndex and index <= #wps and universaltimeout.Check(self, "weaponSelect") then
+                vehicleseat.SelectWeapon(index)
+                universaltimeout.Attach(self, "weaponSelect", 0.5)
+                surface.PlaySound("buttons/combine_button7.wav")
+            end
+        end
     end
 
-    function PilotSeat.PostDrawOpaqueRenderables(seatEnt)
-        local heliEnt = seatEnt:GetParent()
+    function PilotSeat:Draw()
+        local heliEnt = self:GetParent()
         if not IsValid(heliEnt) then return end
 
-        local hudPos = seatEnt:LocalToWorld(vehicleseat.GetLookPos() + Vector(0, 20, 0))
-        local hudAng = seatEnt:LocalToWorldAngles(Angle(0, 0, 90))
+        local hudPos = self:LocalToWorld(vehicleseat.GetLookPos() + Vector(0, 20, 0))
+        local hudAng = self:LocalToWorldAngles(Angle(0, 0, 90))
 
         local throttle = heliEnt:GetThrottle()
 
-        local function applyBloom(rt)
-            render.BloomRenderTarget(rt, 0.5, 0.5, 2, 10, 0)
-        end
-
-        cam.Start3DUI(hudPos, hudAng, 0.03, applyBloom)
+        cam.Start3DUI(hudPos, hudAng, 0.03)
             render.Clear(0, 0, 0, 0, true, true)
 
             --surface.SetDrawColor(255, 255, 255)
@@ -134,33 +143,42 @@ if CLIENT then
                     draw.SimpleText("" .. angNumber, "ChatFont", x, y - 10, textColor, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
                 end
             cam.PopModelMatrix()
+
+            --print("valid seat", vehicleseat.IsValid())
+            --print("has weapons", vehicleseat.HasWeapons())
+            --print("tbl weapons", vehicleseat.GetWeapons())
+
+            local selectedWeapon = vehicleseat.GetSelectedWeapon()
+            if selectedWeapon then
+                draw.SimpleText(selectedWeapon:GetWeaponName(), "ChatFont", centerX, centerY, textColor, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER) 
+            end
         cam.End3DUI()
     end
 
-    function PilotSeat.CreateMove(seatEnt, cmd)
+    function PilotSeat:CreateMove(cmd)
     end
 end
 
 if SERVER then
-    function PilotSeat.StartCommand(seatEnt, ply, cmd)
-        if vehicleseat.IsFreelooking(seatEnt) then return end
+    function PilotSeat:StartCommand(cmd)
+        if vehicleseat.IsFreelooking(self) then return end
 
-        local heliEnt = seatEnt:GetParent()
+        local heliEnt = self:GetParent()
         if not IsValid(heliEnt) then return end
 
-        helisystem.ControlHeli(heliEnt, ply, cmd)
-        vehicleweapon.ControlWeapon(seatEnt, ply, cmd)
+        helisystem.ControlHeli(heliEnt, cmd)
+        vehicleseat.ControlWeapon(self, cmd)
     end
 
-    function PilotSeat.OnEnter(seatEnt, ply)
-        local heliEnt = seatEnt:GetParent()
+    function PilotSeat:OnEnter(ply)
+        local heliEnt = self:GetParent()
         if not IsValid(heliEnt) then return end
 
         heliEnt:HeliStart()
     end
     
-    function PilotSeat.OnExit(seatEnt, ply)
-        local heliEnt = seatEnt:GetParent()
+    function PilotSeat:OnExit(ply)
+        local heliEnt = self:GetParent()
         if not IsValid(heliEnt) then return end
 
         heliEnt:HeliStop()
@@ -178,7 +196,8 @@ local CombineHeli =
             ang = Angle(0, -90, 0),
             weapons =
             {
-                "autocannon"
+                "autocannon",
+                "missile_launcher"
             }
         }
     },
@@ -199,43 +218,43 @@ local CombineHeli =
 }
 
 if CLIENT then
-    function CombineHeli.Initialize(heliEnt)
-        heliEnt.RotorBone = heliEnt:LookupBone("Chopper.Rotor_Blur")
-        heliEnt.TailBone = heliEnt:LookupBone("Chopper.Tail")
-        heliEnt.RotorTailBone = heliEnt:LookupBone("Chopper.Blade_Tail")
-        heliEnt.RotorHullBone = heliEnt:LookupBone("Chopper.Blade_Hull")
-        heliEnt.RotorAng = 0
-        heliEnt.TailAng = 0
+    function CombineHeli:Initialize()
+        self.RotorBone = self:LookupBone("Chopper.Rotor_Blur")
+        self.TailBone = self:LookupBone("Chopper.Tail")
+        self.RotorTailBone = self:LookupBone("Chopper.Blade_Tail")
+        self.RotorHullBone = self:LookupBone("Chopper.Blade_Hull")
+        self.RotorAng = 0
+        self.TailAng = 0
     end
 
-    function CombineHeli.Think(heliEnt)
-        if heliEnt:IsDormant() then return end
+    function CombineHeli:Think()
+        if self:IsDormant() then return end
 
-        local throttle = heliEnt:GetThrottle()
-        local collective = heliEnt:GetCollective()
-        local cyclic = heliEnt:GetCyclic()
+        local throttle = self:GetThrottle()
+        local collective = self:GetCollective()
+        local cyclic = self:GetCyclic()
         
         local rotorThrottle = throttle * 10
         local rotorCollective = (collective > 0) and collective * 2 or 0
 
-        local rotorAng = heliEnt.RotorAng
+        local rotorAng = self.RotorAng
         local newRotorAng = rotorAng + rotorThrottle + rotorCollective
 
-        heliEnt.RotorAng = newRotorAng % 360
-        heliEnt.TailAng = cyclic.y * 45
+        self.RotorAng = newRotorAng % 360
+        self.TailAng = cyclic.y * 45
     end
 
-    function CombineHeli.Draw(heliEnt)    
-        heliEnt:ManipulateBoneAngles(heliEnt.RotorBone, Angle(heliEnt.RotorAng, 0, 0), true)
-        heliEnt:ManipulateBoneAngles(heliEnt.RotorTailBone, Angle(0, 0, heliEnt.RotorAng), true)
-        heliEnt:ManipulateBoneAngles(heliEnt.RotorHullBone, Angle(0, 0, heliEnt.RotorAng), true)
-        heliEnt:ManipulateBoneAngles(heliEnt.TailBone, Angle(0, heliEnt.TailAng, 0), true)
+    function CombineHeli:Draw()    
+        self:ManipulateBoneAngles(self.RotorBone, Angle(self.RotorAng, 0, 0), true)
+        self:ManipulateBoneAngles(self.RotorTailBone, Angle(0, 0, self.RotorAng), true)
+        self:ManipulateBoneAngles(self.RotorHullBone, Angle(0, 0, self.RotorAng), true)
+        self:ManipulateBoneAngles(self.TailBone, Angle(0, self.TailAng, 0), true)
     end
 end
 
 if SERVER then
-    function CombineHeli.Initialize(heliEnt)
-        heliEnt:SetSubMaterial(1, "models/effects/vol_light001")
+    function CombineHeli:Initialize()
+        self:SetSubMaterial(1, "models/effects/vol_light001")
     end 
 end
 
@@ -329,7 +348,6 @@ end
 
 local AutocannonProjectile = 
 {
-    dragCoef = 0.04
 }
 
 if CLIENT then

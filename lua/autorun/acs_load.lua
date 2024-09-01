@@ -32,8 +32,9 @@ ClientsideScript("libs/cl_bloomrt.lua")
 -- ClientsideScript("libs/cl_yolox.lua")
 ServersideScript("libs/sv_discord.lua")
 
-ServersideScript("libs/sh_ownerwrapper.lua")
+SharedScript("libs/sh_ownerwrapper.lua")
 ServersideScript("libs/sv_angforce.lua")
+SharedScript("libs/sh_universaltimeout.lua")
 
 ServersideScript("libs/sv_damagesystem.lua")
 
