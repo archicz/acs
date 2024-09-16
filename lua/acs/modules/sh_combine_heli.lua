@@ -20,19 +20,7 @@ local PilotSeat =
 
 if CLIENT then
     function PilotSeat:ButtonPressed(button)
-        if not vehicleseat.HasWeapons() then return end
-        local wps = vehicleseat.GetWeapons()
-        local selectedIndex = vehicleseat.GetSelectedWeaponIndex()
-
-        for key = KEY_1, (KEY_9 - KEY_1) do
-            local index = key - 1
-
-            if button == key and index != selectedIndex and index <= #wps and universaltimeout.Check(self, "weaponSelect") then
-                vehicleseat.SelectWeapon(index)
-                universaltimeout.Attach(self, "weaponSelect", 0.5)
-                surface.PlaySound("buttons/combine_button7.wav")
-            end
-        end
+        vehicleseat.ControlWeaponSelection(button)
     end
 
     function PilotSeat:Draw()
@@ -150,7 +138,7 @@ if CLIENT then
 
             local selectedWeapon = vehicleseat.GetSelectedWeapon()
             if selectedWeapon then
-                draw.SimpleText(selectedWeapon:GetWeaponName(), "ChatFont", centerX, centerY, textColor, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER) 
+                draw.SimpleText(selectedWeapon:WeaponData("printName"), "ChatFont", centerX, centerY, textColor, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER) 
             end
         cam.End3DUI()
     end
@@ -260,6 +248,8 @@ end
 
 local MissileLauncher =
 {
+    printName = "Missile Launcher",
+
     leftLauncher = 
     {
         pos = Vector(21, 64, -71),
@@ -316,9 +306,11 @@ if SERVER then
     
     function MissileLauncher:PrimaryFire()
         if not self.LeftLaunched then
+            print("left launch")
             missilesystem.LaunchMissile(self.LeftMissile)
             self.LeftLaunched = true
         elseif not self.RightLaunched then
+            print("right launch")
             missilesystem.LaunchMissile(self.RightMissile)
             self.RightLaunched = true
         end
@@ -338,6 +330,14 @@ if CLIENT then
 
     function MissileLauncher:Think()
     end
+
+    function MissileLauncher:Reloading()
+        self:EmitSound("npc/turret_floor/deploy.wav")
+    end
+
+    function MissileLauncher:Reloaded()
+        self:EmitSound("npc/dog/dog_pneumatic1.wav")
+    end
     
     function MissileLauncher:PrimaryFire()
     end
@@ -348,31 +348,40 @@ end
 
 local AutocannonProjectile = 
 {
+    dragCoef = 0.005
 }
 
 if CLIENT then
     function AutocannonProjectile:OnCreated()
-        self.ParticleEmitter = ParticleEmitter(self:GetPos())
+        self.Emitter = ParticleEmitter(self:GetPos())
+
+        local Size = 30
+        local Length = 1
+
+        self.Particle = self.Emitter:Add("effects/laser1", self:GetPos())
+		self.Particle:SetDieTime(1)
+		self.Particle:SetStartAlpha(255)
+		self.Particle:SetEndAlpha(255)
+		self.Particle:SetStartSize(Size)
+		self.Particle:SetEndSize(Size)
+        self.Particle:SetStartLength(Length)
+        self.Particle:SetEndLength(Length)
+		self.Particle:SetVelocity(self:GetVelocity())
+        self.Particle:SetColor(0, 255, 0)
     end
 
     function AutocannonProjectile:OnRemove()
-        if self.ParticleEmitter then
-            self.ParticleEmitter:Finish()
-        end
     end
 
-    function AutocannonProjectile:Draw() 
-        local particle = self.ParticleEmitter:Add("effects/spark", self:GetPos())
-        if particle then
-            particle:SetDieTime(1)
-    
-            particle:SetStartAlpha(255)
-            particle:SetEndAlpha(0)
-    
-            particle:SetStartSize(5)
-            particle:SetEndSize(0)
-            particle:SetVelocity(VectorRand() * 50)
-        end
+    function AutocannonProjectile:Draw()
+        local Length = math.max(self:GetDeltaPos():Length() * 2, 1)
+
+        self.Particle:SetDieTime(5)
+        self.Particle:SetStartLength(Length)
+        self.Particle:SetEndLength(Length)
+        self.Particle:SetPos(self:GetPos())
+        self.Particle:SetAngles(self:GetDeltaPos():Angle())
+        self.Particle:SetVelocity(self:GetVelocity())
     end
 end
 
@@ -388,12 +397,14 @@ end
 
 local Autocannon =
 {
+    printName = "Autocannon",
+
     muzzlePos = Vector(203, 4, -83),
 
     maxAmmo = 2000,
     defaultAmmo = 2000,
 
-    primaryFireRate = 0.075,
+    primaryFireRate = 0.1,
     secondaryFireRate = 0.1,
 
     reloadDelay = 1.2
@@ -409,12 +420,12 @@ if SERVER then
     function Autocannon:PrimaryFire()
         local muzzlePos = self:WeaponData("muzzlePos")
         local projectileDir = self:GetForward()
-        local projectileSpeed = 19000
-        local projectileSpread = Angle(1, 1, 0)
+        local projectileSpeed = 10000
+        local projectileSpread = Angle(0.25, 0.25, 0)
         local projectileVelocity = projectilesystem.MakeVelocity(projectileDir, projectileSpeed, projectileSpread)
 
         local proj = projectilesystem.CreateProjectile(self, muzzlePos, projectileVelocity, "autocannon")
-        self:EmitSound("Weapon_AR2.Single")
+        self:EmitSound("acs/vehicle_weapons/autocannon/fire" .. math.random(1, 4) .. ".wav")
     end
 
     function Autocannon:SecondaryFire()
@@ -423,6 +434,13 @@ end
 
 if CLIENT then
     function Autocannon:Initialize()
+        self.ParticleEmitter = ParticleEmitter(self:GetPos())
+    end
+
+    function Autocannon:OnRemove()
+        if self.ParticleEmitter then
+            self.ParticleEmitter:Finish()
+        end
     end
 
     function Autocannon:Think()
