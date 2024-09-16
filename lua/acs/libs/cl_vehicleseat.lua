@@ -23,6 +23,10 @@ function vehicleseat.IsValid()
     return true
 end
 
+function vehicleseat.GetSeat()
+    return ActiveSeat
+end
+
 function vehicleseat.CanFreelook()
     local seatName = ActiveSeatName
     if not seatName then return end
