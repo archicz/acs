@@ -18,6 +18,7 @@ Projectile.__index = Projectile
 function Projectile:New(launcher, localPos, vel, projName)
     self.Launcher = launcher
     self.Pos = launcher:LocalToWorld(localPos)
+    self.LastPos = self.Pos
     self.Velocity = vel
     self.Name = projName
     self.Filter = EntityList(launcher, launcher:GetParent())
@@ -46,6 +47,10 @@ function Projectile:GetVelocity()
     return self.Velocity
 end
 
+function Projectile:GetDeltaPos()
+    return (self.Pos - self.LastPos)
+end
+
 function Projectile:Remove()
     self.MarkedForRemoval = true
     self:ProjectileCall("OnRemove")
@@ -65,10 +70,10 @@ function Projectile:ImpactCheck()
     if trace.Hit then
         if trace.HitWorld then
             self:ProjectileCall("OnImpactWorld", trace)
-            print("hit world")
+            -- print("hit world")
         elseif IsValid(trace.Entity) then
             self:ProjectileCall("OnImpactEntity", trace)
-            print("hit entity")
+            -- print("hit entity")
         end
 
         self:Remove()
@@ -83,7 +88,8 @@ function Projectile:Simulate()
     local drag = self.Velocity:GetNormalized() * (dragCoef * self.Velocity:LengthSqr()) / self.DragDiv
     local correction = 0.5 * (gravity - drag) * deltaTime
 
-	self.NextPos = self.Pos + (self.Velocity + correction) * deltaTime
+    self.LastPos = self.Pos
+    self.NextPos = self.Pos + (self.Velocity + correction) * deltaTime
     self.NextVelocity = self.Velocity + (gravity - drag) * deltaTime
 
     self:ImpactCheck()
