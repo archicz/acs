@@ -53,13 +53,19 @@ function missilesystem.SetGuidanceTarget(missileEnt, target)
 end
 
 function missilesystem.LaunchMissile(missileEnt, ...)
-    if not IsValid(missileEnt) then return end
+    if not IsValid(missileEnt) then 
+        return 
+    end
 
     local launcher = missileEnt:GetLauncher()
-    if not IsValid(launcher) then return end
+    if not IsValid(launcher) then 
+        return 
+    end
 
     local baseEnt = launcher:GetParent()
-    if not IsValid(baseEnt) then return end
+    if not IsValid(baseEnt) then
+        return 
+    end
 
     missileEnt:SetParent(nil)
     hook.Run("MissileLaunched", missileEnt)

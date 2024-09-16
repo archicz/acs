@@ -37,6 +37,11 @@ end
 
 function ENT:MissileLaunch()
     if self:GetLaunched() then return end
+
+	local phys = self:GetPhysicsObject()
+	if phys:IsValid() then
+		phys:Wake()
+	end
     
     self:SetLaunched(true)
     self.LaunchTime = CurTime()
