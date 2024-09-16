@@ -31,6 +31,26 @@ function vehicleseat.SelectWeapon(index)
     net.SendToServer()
 end
 
+function vehicleseat.ControlWeaponSelection(button)
+    if not vehicleseat.HasWeapons() then return end
+
+    local seatEnt = vehicleseat.GetSeat()
+    if not IsValid(seatEnt) then return end
+
+    local wps = vehicleseat.GetWeapons()
+    local selectedIndex = vehicleseat.GetSelectedWeaponIndex()
+
+    for key = KEY_1, (KEY_9 - KEY_1) do
+        local index = key - 1
+
+        if button == key and index != selectedIndex and index <= #wps and universaltimeout.Check(seatEnt, "weaponSelect") then
+            vehicleseat.SelectWeapon(index)
+            universaltimeout.Attach(seatEnt, "weaponSelect", 0.5)
+            surface.PlaySound("buttons/combine_button7.wav")
+        end
+    end
+end
+
 function vehicleseat.HasWeapons()
     local wps = vehicleseat.GetWeapons()
     if not wps then return false end
