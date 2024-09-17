@@ -1,13 +1,17 @@
-local function TestMenu()
-	local frame = vgui.Create("DFrame")
-	frame:SetSize(1024, 1024)
-	frame:SetTitle("Derma Frame")
-    frame:Center()
-	frame:MakePopup()
+local nigger = false
+local prevNigger = false
+local tglNigger = false
 
-    local icon = vgui.Create("D3DScene", frame)
-    icon:Dock(FILL)
-    -- icon:SetModel("models/hunter/blocks/cube025x025x025.mdl")
-end
+hook.Add("DrawOverlay", "NegrDraw", function()
+    prevNigger = nigger
+    nigger = input.IsKeyDown(KEY_F3)
 
-concommand.Add("3dinteractive", TestMenu)
+    if nigger and not prevNigger then
+        tglNigger = !tglNigger
+    end
+
+    if not tglNigger then return end
+
+    imgui.Start2D()
+    imgui.End2D()
+end)
