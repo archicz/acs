@@ -36,7 +36,7 @@ SharedScript("libs/sh_ownerwrapper.lua")
 ServersideScript("libs/sv_angforce.lua")
 SharedScript("libs/sh_universaltimeout.lua")
 
-ClientsideScript("libs/cl_3dinteractive.lua")
+ClientsideScript("libs/cl_d3dscene.lua")
 
 ServersideScript("libs/sv_damagesystem.lua")
 
@@ -63,3 +63,4 @@ ServersideScript("libs/sv_helisystem.lua")
 -- Modules
 SharedScript("modules/sh_missiles.lua")
 SharedScript("modules/sh_combine_heli.lua")
+ClientsideScript("modules/cl_menu.lua")
