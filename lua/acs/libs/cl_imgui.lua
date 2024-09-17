@@ -16,7 +16,7 @@ local function CursorInRect(x, y, w, h)
 end
 
 function imgui.Start2D()
-    input.UnlockCursor()
+    cursorunlock.Request()
     MouseX, MouseY = input.GetCursorPos()
 
     PreviousLeftPressing = LeftPressing

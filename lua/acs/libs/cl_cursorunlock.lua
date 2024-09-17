@@ -1,4 +1,4 @@
-if not input then return end
+cursorunlock = {}
 
 local UnlockRequested = false
 local UnlockPanel = false
@@ -14,7 +14,7 @@ local function CheckState()
     end
 end
 
-function input.UnlockCursor()
+function cursorunlock.Request()
     UnlockRequested = true
     if ispanel(UnlockPanel) then return end
 
