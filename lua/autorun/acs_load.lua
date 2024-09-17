@@ -36,7 +36,7 @@ SharedScript("libs/sh_ownerwrapper.lua")
 ServersideScript("libs/sv_angforce.lua")
 SharedScript("libs/sh_universaltimeout.lua")
 
-ClientsideScript("libs/cl_d3dscene.lua")
+ClientsideScript("libs/cl_3dscene.lua")
 
 ServersideScript("libs/sv_damagesystem.lua")
 

@@ -1,3 +1,29 @@
+local SceneObject = {}
+SceneObject.__index = SceneObject
+
+function SceneObject:New()
+
+end
+
+local SceneCamera = {}
+SceneCamera.__index = SceneCamera
+
+function SceneCamera:New()
+    self.Pos = Vector(0, 0, 0)
+    self.FOV = 90
+end
+
+local Scene = {}
+Scene.__index = Scene
+
+function Scene:New()
+
+end
+
+function Scene:ImportPAC()
+
+end
+
 /*local PANEL = {}
 
 AccessorFunc( PANEL, "m_fAnimSpeed",	"AnimSpeed" )
