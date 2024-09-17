@@ -136,11 +136,6 @@ function DiscordMessage:NewEmbed(title, desc, clr)
 	return instance
 end
 
-function DiscordMessage:ImportEmbed(embedJson)
-    local embed = util.JSONToTable(embedJson)
-	table.insert(self.msgData.embeds, embed)
-end
-
 
 
 local DiscordMessageActionRow = {}
