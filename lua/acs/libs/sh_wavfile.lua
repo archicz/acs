@@ -2,57 +2,57 @@ local WavFile = {}
 WavFile.__index = WavFile
 
 function WavFile:New(path)
-    self.fileHandle = file.Open(path, "rb", "GAME")
-    if not self.fileHandle then return end
+    self.FileHandle = file.Open(path, "rb", "GAME")
+    if not self.FileHandle then return end
 
-    self.fileHandle:Skip(15)
+    self.FileHandle:Skip(15)
 
-    assert(self.fileHandle:ReadByte() == 0x20, "Only format 0x20 is supported")
+    assert(self.FileHandle:ReadByte() == 0x20, "Only format 0x20 is supported")
 
-    self.fileHandle:Skip(4)
+    self.FileHandle:Skip(4)
 
-    assert(self.fileHandle:ReadUShort() == 1, "Only PCM-Int is supported")
+    assert(self.FileHandle:ReadUShort() == 1, "Only PCM-Int is supported")
 
-    self.numChannels = self.fileHandle:ReadUShort()
-    self.sampleRate = self.fileHandle:ReadULong()
+    self.NumChannels = self.FileHandle:ReadUShort()
+    self.SampleRate = self.FileHandle:ReadULong()
     
-    self.fileHandle:Skip(6)
+    self.FileHandle:Skip(6)
     
-    self.bitsPerSample = self.fileHandle:ReadUShort()
+    self.BitsPerSample = self.FileHandle:ReadUShort()
 
-    self.fileHandle:Skip(4)
+    self.FileHandle:Skip(4)
 
-    self.byteSize = self.fileHandle:ReadULong() / (self.bitsPerSample / 8)
-    self.numSamples = self.byteSize / self.numChannels
-    self.duration = self.numSamples / self.sampleRate
+    self.ByteSize = self.FileHandle:ReadULong() / (self.BitsPerSample / 8)
+    self.NumSamples = self.ByteSize / self.NumChannels
+    self.Duration = self.NumSamples / self.SampleRate
 end
 
 function WavFile:GetNumSamples()
-    return self.numSamples or 0
+    return self.NumSamples or 0
 end
 
 function WavFile:GetSampleRate()
-    return self.sampleRate or 0
+    return self.SampleRate or 0
 end
 
 function WavFile:GetDuration()
-    return self.duration or 0
+    return self.Duration or 0
 end
 
 function WavFile:ReadSamples()
-    if not self.fileHandle then return end
+    if not self.FileHandle then return end
     local data = {}
 
-    for sample = 1, self.numSamples do
+    for sample = 1, self.NumSamples do
         local sampleData = 0
 
-        for chan = 1, self.numChannels do
+        for chan = 1, self.NumChannels do
             local chanData = 0
 
-            if self.bitsPerSample == 8 then
-                chanData = self.fileHandle:ReadByte() / 255
-            elseif self.bitsPerSample == 16 then
-                chanData = self.fileHandle:ReadShort() / 65535
+            if self.BitsPerSample == 8 then
+                chanData = self.FileHandle:ReadByte() / 255
+            elseif self.BitsPerSample == 16 then
+                chanData = self.FileHandle:ReadShort() / 65535
             end
 
             sampleData = sampleData + chanData
@@ -65,25 +65,25 @@ function WavFile:ReadSamples()
 end
 
 function WavFile:ReadSamplesReverse()
-    if not self.fileHandle then return end
+    if not self.FileHandle then return end
     local data = {}
 
-    for sample = 1, self.numSamples do
+    for sample = 1, self.NumSamples do
         local sampleData = 0
 
-        for chan = 1, self.numChannels do
+        for chan = 1, self.NumChannels do
             local chanData = 0
 
-            if self.bitsPerSample == 8 then
-                chanData = self.fileHandle:ReadByte() / 255
-            elseif self.bitsPerSample == 16 then
-                chanData = self.fileHandle:ReadShort() / 65535
+            if self.BitsPerSample == 8 then
+                chanData = self.FileHandle:ReadByte() / 255
+            elseif self.BitsPerSample == 16 then
+                chanData = self.FileHandle:ReadShort() / 65535
             end
 
             sampleData = sampleData + chanData
         end
 
-        data[self.numSamples - sample] = math.Clamp(sampleData, -1, 1)
+        data[self.NumSamples - sample] = math.Clamp(sampleData, -1, 1)
     end
 
     return data
