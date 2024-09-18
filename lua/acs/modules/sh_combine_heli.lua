@@ -32,7 +32,7 @@ if CLIENT then
 
         local throttle = heliEnt:GetThrottle()
 
-        cam.Start3DUI(hudPos, hudAng, 0.03)
+        /*cam.Start3DUI(hudPos, hudAng, 0.03)
             render.Clear(0, 0, 0, 0, true, true)
 
             --surface.SetDrawColor(255, 255, 255)
@@ -140,7 +140,7 @@ if CLIENT then
             if selectedWeapon then
                 draw.SimpleText(selectedWeapon:WeaponData("printName"), "ChatFont", centerX, centerY, textColor, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER) 
             end
-        cam.End3DUI()
+        cam.End3DUI()*/
     end
 
     function PilotSeat:CreateMove(cmd)
