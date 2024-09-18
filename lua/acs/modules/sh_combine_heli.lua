@@ -24,8 +24,7 @@ if CLIENT then
     end
 
     function PilotSeat:Draw()
-        local heliEnt = self:GetParent()
-        if not IsValid(heliEnt) then return end
+        local heliEnt = self:GetVehicle()
 
         local hudPos = self:LocalToWorld(vehicleseat.GetLookPos() + Vector(0, 20, 0))
         local hudAng = self:LocalToWorldAngles(Angle(0, 0, 90))
