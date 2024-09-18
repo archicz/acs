@@ -1,12 +1,6 @@
 include("shared.lua")
 
-pac.SetupENT(ENT)
-
 function ENT:Initialize()
-    local pacOutfit = self:WeaponData("pacOutfit")
-    if not pacOutfit then return end
-
-    self:AttachPACPart(pacOutfit)
     self:WeaponCall("Initialize")
 end
 
@@ -35,9 +29,5 @@ function ENT:Draw()
 end
 
 function ENT:OnRemove()
-    local pacOutfit = self:WeaponData("pacOutfit")
-    if not pacOutfit then return end
-
-    self:RemovePACPart(pacOutfit)
     self:WeaponCall("OnRemove")
 end

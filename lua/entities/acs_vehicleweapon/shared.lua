@@ -8,6 +8,13 @@ ENT.Category = "ACS"
 ENT.Spawnable = false
 ENT.AdminOnly = true
 
+function ENT:GetVehicle()
+    local vehicleEnt = self:GetParent()
+    if not IsValid(vehicleEnt) then return nil end
+
+    return vehicleEnt
+end
+
 function ENT:WeaponData(key)
     local name = self:GetWeaponName()
     local wpnTbl = vehicleweapon.Get(name)
