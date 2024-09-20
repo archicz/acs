@@ -1,4 +1,4 @@
-cursorunlock = {}
+if not input then return end
 
 local UnlockRequested = false
 local UnlockPanel = false
@@ -14,7 +14,7 @@ local function CheckState()
     end
 end
 
-function cursorunlock.Request()
+function input.UnlockCursor()
     UnlockRequested = true
     if ispanel(UnlockPanel) then return end
 
@@ -23,6 +23,12 @@ function cursorunlock.Request()
     UnlockPanel:SetPos(0, 0)
     UnlockPanel:SetPaintedManually(true)
     UnlockPanel:MakePopup()
+end
+
+function input.SetCursorType(type)
+    if UnlockRequested and ispanel(UnlockPanel) then
+        UnlockPanel:SetCursor(type)
+    end
 end
 
 hook.Add("PreRender", "CursorUnlockReset", ResetState)
