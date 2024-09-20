@@ -161,6 +161,8 @@ function imgui.EndGroup()
     for i = 1, #currentCanvas.drawQueue do
         imgui.Draw(currentCanvas.drawQueue[i])
     end
+
+    imgui.ContentAdd(currentCanvas.w, currentCanvas.h)
 end
 
 function imgui.BeginWindow(title, x, y, w, h)
