@@ -1,11 +1,14 @@
 imgui = {}
 
+IMGUI_POS_CENTER = -1
+IMGUI_SIZE_CONTENT = -1
+
 local BaseWidth = 1920
 local BaseHeight = 1080
 local ScaleDPI = math.min(ScrW() / BaseWidth, ScrH() / BaseHeight)
 
-local Padding = 4
-local TextPadding = 2
+-- local Padding = 4
+-- local TextPadding = 2
 
 local ContextStack = util.Stack()
 local CurrentContext = false
@@ -14,7 +17,17 @@ function imgui.Button(label, w, h)
     local window = CurrentContext.Window
     if not window then return end
 
+    local parentW, parentH = imgui.GetLayout()
     local x, y = imgui.GetCursor()
+
+    if w == IMGUI_SIZE_CONTENT then
+        w = parentW
+    end
+
+    if h == IMGUI_SIZE_CONTENT then
+        h = parentH
+    end
+
     local isHovering = imgui.MouseInRect(x, y, w, h)
     local hasClicked = imgui.HasClicked()
 
@@ -70,7 +83,46 @@ function imgui.GetCursor()
     local canvas = window.currentCanvas
     if canvas then active = canvas end
 
-    return active.cursorX, active.cursorY
+    local x = active.cursorX
+    local y = active.cursorY
+
+    local paddingLeft = active.paddingLeft or 0
+    local paddingTop = active.paddingTop or 0
+
+    return x + paddingLeft, y + paddingTop
+end
+
+function imgui.GetLayout()
+    local window = CurrentContext.Window
+    if not window then return end
+
+    local active = window
+    local canvas = window.currentCanvas
+    if canvas then active = canvas end
+
+    local w = active.w
+    local h = active.h
+
+    local paddingLeft = active.paddingLeft or 0
+    local paddingTop = active.paddingTop or 0
+    local paddingRight = active.paddingRight or 0
+    local paddingBottom = active.paddingBottom or 0
+
+    return w - (paddingRight + paddingLeft), h - (paddingBottom + paddingTop)
+end
+
+function imgui.SetPadding(left, top, right, bottom)
+    local window = CurrentContext.Window
+    if not window then return end
+
+    local active = window
+    local canvas = window.currentCanvas
+    if canvas then active = canvas end
+
+    active.paddingLeft = left
+    active.paddingTop = top
+    active.paddingRight = right
+    active.paddingBottom = bottom
 end
 
 function imgui.ContentAdd(w, h)
@@ -81,12 +133,17 @@ function imgui.ContentAdd(w, h)
     local canvas = window.currentCanvas
     if canvas then active = canvas end
 
+    local paddingLeft = active.paddingLeft or 0
+    local paddingTop = active.paddingTop or 0
+    local paddingRight = active.paddingRight or 0
+    local paddingBottom = active.paddingBottom or 0
+
     if active.sameLine then
-        active.cursorX = active.cursorX + w + Padding
+        active.cursorX = active.cursorX + w + paddingRight
         active.lineHeight = math.max(active.lineHeight, h)
     else
-        active.cursorX = active.x + Padding
-        active.cursorY = active.cursorY + h + Padding
+        active.cursorX = active.x
+        active.cursorY = active.cursorY + h + paddingBottom
     end
 end
 
@@ -109,8 +166,8 @@ function imgui.NewLine()
     local canvas = window.currentCanvas
     if canvas then active = canvas end
 
-    active.cursorX = active.x + Padding
-    active.cursorY = active.y + Padding + active.lineHeight + Padding
+    active.cursorX = active.x
+    active.cursorY = active.y + active.lineHeight
     active.sameLine = false
     active.lineHeight = 0
 end
@@ -119,7 +176,16 @@ function imgui.BeginGroup(w, h)
     local window = CurrentContext.Window
     if not window then return end
 
+    local parentW, parentH = imgui.GetLayout()
     local x, y = imgui.GetCursor()
+
+    if w == IMGUI_SIZE_CONTENT then
+        w = parentW
+    end
+
+    if h == IMGUI_SIZE_CONTENT then
+        h = parentH
+    end
 
     local canvas =
     {
@@ -130,8 +196,8 @@ function imgui.BeginGroup(w, h)
 
         drawQueue = {},
 
-        cursorX = x + Padding,
-        cursorY = y + Padding,
+        cursorX = x,
+        cursorY = y,
         sameLine = false,
         lineHeight = 0
     }
@@ -151,21 +217,34 @@ function imgui.EndGroup()
     window.currentCanvas = previousCanvas
 
     imgui.Draw(function()
-        surface.SetDrawColor(40, 40, 40)
+        surface.SetDrawColor(80, 80, 80)
         surface.DrawRect(currentCanvas.x, currentCanvas.y, currentCanvas.w, currentCanvas.h)
+    end)
 
-        surface.SetDrawColor(100, 100, 100)
-        surface.DrawOutlinedRect(currentCanvas.x, currentCanvas.y, currentCanvas.w, currentCanvas.h)
+    imgui.Draw(function()
+        render.SetScissorRect(currentCanvas.x, currentCanvas.y, currentCanvas.x + currentCanvas.w, currentCanvas.y + currentCanvas.h, true)
     end)
 
     for i = 1, #currentCanvas.drawQueue do
         imgui.Draw(currentCanvas.drawQueue[i])
     end
 
+    imgui.Draw(function()
+        render.SetScissorRect(0, 0, 0, 0, false)
+    end)
+
     imgui.ContentAdd(currentCanvas.w, currentCanvas.h)
 end
 
 function imgui.BeginWindow(title, x, y, w, h)
+    if x == IMGUI_POS_CENTER then
+        x = ScrW() / 2 - w / 2
+    end 
+    
+    if y == IMGUI_POS_CENTER then
+        y = ScrH() / 2 - h / 2
+    end
+
     local window =
     {
         title = title,
@@ -178,8 +257,8 @@ function imgui.BeginWindow(title, x, y, w, h)
         canvasStack = util.Stack(),
         currentCanvas = nil,
 
-        cursorX = x + Padding,
-        cursorY = y + Padding,
+        cursorX = x,
+        cursorY = y,
         sameLine = false,
         lineHeight = 0
     }
@@ -193,9 +272,6 @@ function imgui.EndWindow()
 
     surface.SetDrawColor(32, 32, 32)
     surface.DrawRect(window.x, window.y, window.w, window.h)
-
-    surface.SetDrawColor(100, 100, 100)
-    surface.DrawOutlinedRect(window.x, window.y, window.w, window.h)
     
     for i = 1, #window.drawQueue do
         local drawFn = window.drawQueue[i]
@@ -209,7 +285,6 @@ function imgui.Context2D(ctx)
     ContextStack:Push(ctx)
     CurrentContext = ContextStack:Top()
 
-    cursorunlock.Request()
     CurrentContext.MouseX, CurrentContext.MouseY = input.GetCursorPos()
 
     CurrentContext.PreviousLeftPressing = (CurrentContext.LeftPressing or false)
