@@ -19,9 +19,17 @@ hook.Add("DrawOverlay", "NegrDraw", function()
         imgui.BeginWindow("Settings", IMGUI_POS_CENTER, IMGUI_POS_CENTER, 800, 600)
             imgui.SetPadding(2, 2, 2, 2)
             
-            imgui.BeginGroup(IMGUI_SIZE_CONTENT, 44)
+            imgui.BeginGroup(IMGUI_SIZE_CONTENT, 200)
                 imgui.SetPadding(2, 2, 2, 2)
                 imgui.Button("test1", IMGUI_SIZE_CONTENT, 40)
+
+                imgui.SameLine()
+                imgui.Label("label test")
+                imgui.Label("another text")
+                imgui.Label("label madness")
+
+                imgui.NewLine()
+                imgui.Label("new line")
             imgui.EndGroup()
         imgui.EndWindow()
     imgui.ContextEnd()

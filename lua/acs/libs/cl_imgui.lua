@@ -13,32 +13,7 @@ local ScaleDPI = math.min(ScrW() / BaseWidth, ScrH() / BaseHeight)
 local ContextStack = util.Stack()
 local CurrentContext = false
 
-function imgui.Custom(w, h, drawFn)
-    local window = CurrentContext.Window
-    if not window then return end
-
-    local parentW, parentH = imgui.GetLayout()
-    local x, y = imgui.GetCursor()
-
-    if w == IMGUI_SIZE_CONTENT then
-        w = parentW
-    end
-
-    if h == IMGUI_SIZE_CONTENT then
-        h = parentH
-    end
-
-    imgui.Draw(function()
-        drawFn(x, y, w, h)
-    end)
-
-    imgui.ContentAdd(w, h)
-end
-
 function imgui.Button(label, w, h)
-    local window = CurrentContext.Window
-    if not window then return end
-
     local parentW, parentH = imgui.GetLayout()
     local x, y = imgui.GetCursor()
 
@@ -73,6 +48,31 @@ function imgui.Button(label, w, h)
     imgui.ContentAdd(w, h)
 
     return isHovering and hasClicked
+end
+
+function imgui.Label(label)
+    local parentW, parentH = imgui.GetLayout() -- Get available space in the parent layout
+    local x, y = imgui.GetCursor()             -- Get current cursor position
+    
+    -- Set the font and calculate the text size
+    surface.SetFont("DermaDefault")
+    local textW, textH = surface.GetTextSize(label)
+
+    -- Ensure the label fits within the available width
+    local w = math.min(textW, parentW)
+    local h = textH
+
+    -- Draw the label
+    imgui.Draw(function()
+        surface.SetTextColor(255, 255, 255, 255)
+        surface.SetTextPos(x, y)
+        surface.DrawText(label)
+    end)
+
+    -- print("LABEL", label, w, h)
+
+    -- Update the content area for the next element
+    imgui.ContentAdd(w, h)
 end
 
 function imgui.Draw(drawFn)
@@ -187,6 +187,8 @@ function imgui.SameLine()
     if canvas then active = canvas end
 
     active.sameLine = true
+    active.sameLineCursorX = active.cursorX
+    active.sameLineCursorY = active.cursorY
 end
 
 function imgui.NewLine()
@@ -199,8 +201,14 @@ function imgui.NewLine()
 
     local paddingBottom = active.paddingBottom or 0
 
-    active.cursorX = active.x
-    active.cursorY = active.y + active.lineHeight + paddingBottom
+    if active.sameLine then
+        active.cursorX = active.sameLineCursorX
+        active.cursorY = active.sameLineCursorY + active.lineHeight + paddingBottom
+    else
+        active.cursorX = active.x
+        active.cursorY = active.y + active.lineHeight + paddingBottom
+    end
+
     active.sameLine = false
     active.lineHeight = 0
 end
