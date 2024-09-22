@@ -13,6 +13,28 @@ local ScaleDPI = math.min(ScrW() / BaseWidth, ScrH() / BaseHeight)
 local ContextStack = util.Stack()
 local CurrentContext = false
 
+function imgui.Custom(w, h, drawFn)
+    local window = CurrentContext.Window
+    if not window then return end
+
+    local parentW, parentH = imgui.GetLayout()
+    local x, y = imgui.GetCursor()
+
+    if w == IMGUI_SIZE_CONTENT then
+        w = parentW
+    end
+
+    if h == IMGUI_SIZE_CONTENT then
+        h = parentH
+    end
+
+    imgui.Draw(function()
+        drawFn(x, y, w, h)
+    end)
+
+    imgui.ContentAdd(w, h)
+end
+
 function imgui.Button(label, w, h)
     local window = CurrentContext.Window
     if not window then return end
@@ -100,6 +122,15 @@ function imgui.GetLayout()
     local canvas = window.currentCanvas
     if canvas then active = canvas end
 
+    local x = active.x
+    local y = active.y
+
+    local cursorX = active.cursorX
+    local cursorY = active.cursorY
+
+    local filledW = cursorX - x
+    local filledH = cursorY - y
+    
     local w = active.w
     local h = active.h
 
@@ -108,7 +139,7 @@ function imgui.GetLayout()
     local paddingRight = active.paddingRight or 0
     local paddingBottom = active.paddingBottom or 0
 
-    return w - (paddingRight + paddingLeft), h - (paddingBottom + paddingTop)
+    return w - (paddingRight + paddingLeft + filledW), h - (paddingBottom + paddingTop + filledH)
 end
 
 function imgui.SetPadding(left, top, right, bottom)
@@ -166,8 +197,10 @@ function imgui.NewLine()
     local canvas = window.currentCanvas
     if canvas then active = canvas end
 
+    local paddingBottom = active.paddingBottom or 0
+
     active.cursorX = active.x
-    active.cursorY = active.y + active.lineHeight
+    active.cursorY = active.y + active.lineHeight + paddingBottom
     active.sameLine = false
     active.lineHeight = 0
 end
@@ -222,7 +255,7 @@ function imgui.EndGroup()
     end)
 
     imgui.Draw(function()
-        render.SetScissorRect(currentCanvas.x, currentCanvas.y, currentCanvas.x + currentCanvas.w, currentCanvas.y + currentCanvas.h, true)
+        render.SetStencilScissorRect(currentCanvas.x, currentCanvas.y, currentCanvas.x + currentCanvas.w, currentCanvas.y + currentCanvas.h, true)
     end)
 
     for i = 1, #currentCanvas.drawQueue do
@@ -230,19 +263,27 @@ function imgui.EndGroup()
     end
 
     imgui.Draw(function()
-        render.SetScissorRect(0, 0, 0, 0, false)
+        render.SetStencilScissorRect(0, 0, 0, 0, false)
     end)
 
     imgui.ContentAdd(currentCanvas.w, currentCanvas.h)
 end
 
 function imgui.BeginWindow(title, x, y, w, h)
+    if w == IMGUI_SIZE_CONTENT then
+        w = CurrentContext.MaxWidth
+    end
+
+    if h == IMGUI_SIZE_CONTENT then
+        h = CurrentContext.MaxHeight
+    end
+
     if x == IMGUI_POS_CENTER then
-        x = ScrW() / 2 - w / 2
+        x = CurrentContext.MaxWidth / 2 - w / 2
     end 
     
     if y == IMGUI_POS_CENTER then
-        y = ScrH() / 2 - h / 2
+        y = CurrentContext.MaxHeight / 2 - h / 2
     end
 
     local window =
@@ -296,6 +337,8 @@ function imgui.Context2D(ctx)
     CurrentContext.RightPressed = (CurrentContext.RightPressing and not CurrentContext.PreviousRightPressing)
 
     CurrentContext.Window = nil
+    CurrentContext.MaxWidth = ScrW()
+    CurrentContext.MaxHeight = ScrH()
 end
 
 function imgui.ContextEnd()

@@ -16,16 +16,13 @@ hook.Add("DrawOverlay", "NegrDraw", function()
 
     input.UnlockCursor()
     imgui.Context2D(ctx)
-        imgui.BeginWindow("Settings", IMGUI_POS_CENTER, IMGUI_POS_CENTER, 500, 420)
+        imgui.BeginWindow("Settings", IMGUI_POS_CENTER, IMGUI_POS_CENTER, 800, 600)
             imgui.SetPadding(2, 2, 2, 2)
-
-            imgui.BeginGroup(200, IMGUI_SIZE_CONTENT)
+            
+            imgui.BeginGroup(IMGUI_SIZE_CONTENT, 44)
                 imgui.SetPadding(2, 2, 2, 2)
-                imgui.SameLine()
-                imgui.Button("test", 50, 40)
-                imgui.Button("test", 25, 40)
+                imgui.Button("test1", IMGUI_SIZE_CONTENT, 40)
             imgui.EndGroup()
-
         imgui.EndWindow()
     imgui.ContextEnd()
 end)
