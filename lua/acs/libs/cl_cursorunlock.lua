@@ -19,15 +19,15 @@ function input.UnlockCursor()
     if ispanel(UnlockPanel) then return end
 
     UnlockPanel = vgui.Create("DFrame")
-    UnlockPanel:SetSize(0, 0)
+    UnlockPanel:SetSize(ScrW(), ScrH())
     UnlockPanel:SetPos(0, 0)
     UnlockPanel:SetPaintedManually(true)
     UnlockPanel:MakePopup()
 end
 
-function input.SetCursorType(type)
+function input.SetCursorType(cursorType)
     if UnlockRequested and ispanel(UnlockPanel) then
-        UnlockPanel:SetCursor(type)
+        UnlockPanel:SetCursor(cursorType) 
     end
 end
 
