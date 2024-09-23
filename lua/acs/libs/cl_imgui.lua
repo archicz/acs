@@ -3,6 +3,9 @@ imgui = {}
 IMGUI_POS_CENTER = -1
 IMGUI_SIZE_CONTENT = -1
 
+IMGUI_SLIDER_FORMAT_ABS = 0
+IMGUI_SLIDER_FORMAT_DEC = 1
+
 local BaseWidth = 1920
 local BaseHeight = 1080
 local ScaleDPI = math.min(ScrW() / BaseWidth, ScrH() / BaseHeight)
@@ -28,6 +31,10 @@ function imgui.Button(label, w, h)
     local isHovering = imgui.MouseInRect(x, y, w, h)
     local hasClicked = imgui.HasClicked()
 
+    if isHovering then
+        input.SetCursorType("hand")
+    end
+
     imgui.Draw(function()
         if isHovering then
             surface.SetDrawColor(60, 60, 60)
@@ -51,28 +58,140 @@ function imgui.Button(label, w, h)
 end
 
 function imgui.Label(label)
-    local parentW, parentH = imgui.GetLayout() -- Get available space in the parent layout
-    local x, y = imgui.GetCursor()             -- Get current cursor position
-    
-    -- Set the font and calculate the text size
+    local parentW, parentH = imgui.GetLayout()
+    local x, y = imgui.GetCursor()
+
     surface.SetFont("DermaDefault")
     local textW, textH = surface.GetTextSize(label)
 
-    -- Ensure the label fits within the available width
     local w = math.min(textW, parentW)
     local h = textH
 
-    -- Draw the label
     imgui.Draw(function()
-        surface.SetTextColor(255, 255, 255, 255)
+        surface.SetTextColor(255, 255, 255)
         surface.SetTextPos(x, y)
         surface.DrawText(label)
     end)
 
-    -- print("LABEL", label, w, h)
-
-    -- Update the content area for the next element
     imgui.ContentAdd(w, h)
+end
+
+function imgui.Checkbox(label, checked)
+    local x, y = imgui.GetCursor()
+
+    local boxSize = 16
+    local boxSpacing = 4
+
+    surface.SetFont("DermaDefault")
+    local textW, textH = surface.GetTextSize(label)
+
+    local isHovering = imgui.MouseInRect(x, y, boxSize, boxSize)
+    local hasClicked = isHovering and imgui.HasClicked()
+
+    if isHovering then
+        input.SetCursorType("hand")
+    end
+
+    if hasClicked then
+        checked = not checked
+    end
+
+    imgui.Draw(function()
+        surface.SetDrawColor(50, 50, 50)
+        surface.DrawRect(x, y, boxSize, boxSize)
+
+        surface.SetDrawColor(255, 255, 255)
+        surface.DrawOutlinedRect(x, y, boxSize, boxSize)
+
+        if checked then
+            surface.SetDrawColor(100, 255, 100)
+            surface.DrawRect(x + 4, y + 4, boxSize - 8, boxSize - 8)
+        end
+
+        surface.SetTextColor(255, 255, 255, 255)
+        surface.SetTextPos(x + boxSize + boxSpacing, y + (boxSize / 2) - (textH / 2))
+        surface.DrawText(label)
+    end)
+
+    imgui.ContentAdd(boxSize + boxSpacing + textW, boxSize)
+
+    return checked
+end
+
+function imgui.SliderInternal(label, minValue, maxValue, valueFormat, value)
+    local parentW, parentH = imgui.GetLayout()
+    local x, y = imgui.GetCursor()
+
+    local sliderHeight = 6
+    local textSpacing = 4
+    local valueText = ""
+
+    if valueFormat == IMGUI_SLIDER_FORMAT_ABS then
+        valueText = string.format("%i", value)
+    elseif valueFormat == IMGUI_SLIDER_FORMAT_DEC then
+        valueText = string.format("%.1f", value)
+    end
+
+    surface.SetFont("DermaDefault")
+    local labelTextW, labelTextH = surface.GetTextSize(label)
+    local valueTextW, valueTextH = surface.GetTextSize(valueText)
+
+    local w = parentW
+    local h = sliderHeight + math.max(labelTextH, valueTextH) + textSpacing
+
+    local isHovering = imgui.MouseInRect(x, y, w, h)
+    local isPressing = isHovering and imgui.IsPressing()
+
+    if isHovering then
+        input.SetCursorType("hand")
+    end
+    
+    if isPressing then
+        local decPlaces = 1
+
+        if valueFormat == IMGUI_SLIDER_FORMAT_ABS then
+            decPlaces = 1
+        elseif valueFormat == IMGUI_SLIDER_FORMAT_DEC then
+            decPlaces = 2
+        end
+
+        local mouseX = imgui.GetMouseX()
+        local relativeX = mouseX - x
+        local perc = math.Round(relativeX / w, decPlaces)
+        local finalValue = minValue + (maxValue - minValue) * perc
+
+        value = finalValue
+    end
+
+    local valuePerc = (value - minValue) / (maxValue - minValue)
+
+    imgui.Draw(function()
+        surface.SetTextColor(255, 255, 255, 255)
+        surface.SetTextPos(x, y)
+        surface.DrawText(label)
+
+        surface.SetTextColor(255, 255, 255, 255)
+        surface.SetTextPos(x + w - valueTextW, y)
+        surface.DrawText(valueText)
+
+        surface.SetDrawColor(100, 175, 100)
+        surface.DrawRect(x, y + h - sliderHeight, w, sliderHeight)
+
+        surface.SetDrawColor(100, 255, 100)
+        surface.DrawRect(x, y + h - sliderHeight, valuePerc * w, sliderHeight)
+    end)
+
+    imgui.ContentAdd(w, h)
+
+    return value
+end
+
+function imgui.SliderInt(label, minValue, maxValue, value)
+    return imgui.SliderInternal(label, minValue, maxValue, IMGUI_SLIDER_FORMAT_ABS, value)
+end
+
+function imgui.SliderDecimal(label, minValue, maxValue, value)
+    return imgui.SliderInternal(label, minValue, maxValue, IMGUI_SLIDER_FORMAT_DEC, value)
 end
 
 function imgui.Draw(drawFn)
@@ -93,8 +212,16 @@ function imgui.MouseInRect(x, y, w, h)
     return CurrentContext.MouseX >= x and CurrentContext.MouseX <= x + w and CurrentContext.MouseY >= y and CurrentContext.MouseY <= y + h
 end
 
+function imgui.GetMouseX()
+    return CurrentContext.MouseX
+end
+
 function imgui.HasClicked()
     return CurrentContext.LeftPressed
+end
+
+function imgui.IsPressing()
+    return CurrentContext.LeftPressing
 end
 
 function imgui.GetCursor()
@@ -171,7 +298,8 @@ function imgui.ContentAdd(w, h)
 
     if active.sameLine then
         active.cursorX = active.cursorX + w + paddingRight
-        active.lineHeight = math.max(active.lineHeight, h)
+        -- active.sameLineHeightLast = h
+        active.sameLineHeightMax = math.max(active.sameLineHeightMax, h)
     else
         active.cursorX = active.x
         active.cursorY = active.cursorY + h + paddingBottom
@@ -203,14 +331,14 @@ function imgui.NewLine()
 
     if active.sameLine then
         active.cursorX = active.sameLineCursorX
-        active.cursorY = active.sameLineCursorY + active.lineHeight + paddingBottom
+        active.cursorY = active.sameLineCursorY + active.sameLineHeightMax + paddingBottom
     else
         active.cursorX = active.x
-        active.cursorY = active.y + active.lineHeight + paddingBottom
+        active.cursorY = active.y + active.sameLineHeightMax + paddingBottom
     end
 
     active.sameLine = false
-    active.lineHeight = 0
+    active.sameLineHeightMax = 0
 end
 
 function imgui.BeginGroup(w, h)
@@ -240,7 +368,7 @@ function imgui.BeginGroup(w, h)
         cursorX = x,
         cursorY = y,
         sameLine = false,
-        lineHeight = 0
+        sameLineHeightMax = 0
     }
 
     window.canvasStack:Push(canvas)
@@ -258,12 +386,13 @@ function imgui.EndGroup()
     window.currentCanvas = previousCanvas
 
     imgui.Draw(function()
-        surface.SetDrawColor(80, 80, 80)
+        surface.SetDrawColor(80, 80, 80)--, 100)
         surface.DrawRect(currentCanvas.x, currentCanvas.y, currentCanvas.w, currentCanvas.h)
     end)
 
     imgui.Draw(function()
-        render.SetStencilScissorRect(currentCanvas.x, currentCanvas.y, currentCanvas.x + currentCanvas.w, currentCanvas.y + currentCanvas.h, true)
+        -- render.SetStencilScissorRect(currentCanvas.x, currentCanvas.y, currentCanvas.x + currentCanvas.w, currentCanvas.y + currentCanvas.h, true)
+        render.SetScissorRect(currentCanvas.x, currentCanvas.y, currentCanvas.x + currentCanvas.w, currentCanvas.y + currentCanvas.h, true)
     end)
 
     for i = 1, #currentCanvas.drawQueue do
@@ -271,7 +400,8 @@ function imgui.EndGroup()
     end
 
     imgui.Draw(function()
-        render.SetStencilScissorRect(0, 0, 0, 0, false)
+        -- render.SetStencilScissorRect(0, 0, 0, 0, false)
+        render.SetScissorRect(0, 0, 0, 0, false)
     end)
 
     imgui.ContentAdd(currentCanvas.w, currentCanvas.h)
@@ -309,7 +439,7 @@ function imgui.BeginWindow(title, x, y, w, h)
         cursorX = x,
         cursorY = y,
         sameLine = false,
-        lineHeight = 0
+        sameLineHeightMax = 0
     }
 
     CurrentContext.Window = window
