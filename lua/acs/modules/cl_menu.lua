@@ -7,6 +7,14 @@ local ctx = {}
 local chkb = false
 local sldr = 1.2
 
+local hangarScene = {}
+
+local function PrototypeScene()
+
+end
+
+PrototypeScene()
+
 hook.Add("DrawOverlay", "NegrDraw", function()
     prevNigger = nigger
     nigger = input.IsKeyDown(KEY_F3)
@@ -21,7 +29,8 @@ hook.Add("DrawOverlay", "NegrDraw", function()
     imgui.Context2D(ctx)
         imgui.BeginWindow("Settings", IMGUI_POS_CENTER, IMGUI_POS_CENTER, 800, 600)
             imgui.SetPadding(2, 2, 2, 2)
-            
+            imgui.SameLine()
+
             imgui.BeginGroup(200, IMGUI_SIZE_CONTENT)
                 imgui.SetPadding(2, 2, 2, 2)
                 imgui.Button("test1", IMGUI_SIZE_CONTENT, 40)
@@ -41,6 +50,10 @@ hook.Add("DrawOverlay", "NegrDraw", function()
                 imgui.NewLine()
                 sldr = imgui.SliderDecimal("test slider", 0, 10, sldr)
                 -- sldr = imgui.Slider("slider", 0, 10, sldr)
+            imgui.EndGroup()
+
+            imgui.BeginGroup(IMGUI_SIZE_CONTENT, IMGUI_SIZE_CONTENT)
+                
             imgui.EndGroup()
         imgui.EndWindow()
     imgui.ContextEnd()

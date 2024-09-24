@@ -174,7 +174,7 @@ function imgui.SliderInternal(label, minValue, maxValue, valueFormat, value)
         surface.SetTextPos(x + w - valueTextW, y)
         surface.DrawText(valueText)
 
-        surface.SetDrawColor(100, 175, 100)
+        surface.SetDrawColor(75, 150, 75)
         surface.DrawRect(x, y + h - sliderHeight, w, sliderHeight)
 
         surface.SetDrawColor(100, 255, 100)
@@ -186,7 +186,7 @@ function imgui.SliderInternal(label, minValue, maxValue, valueFormat, value)
     return value
 end
 
-function imgui.SliderInt(label, minValue, maxValue, value)
+function imgui.SliderAbsolute(label, minValue, maxValue, value)
     return imgui.SliderInternal(label, minValue, maxValue, IMGUI_SLIDER_FORMAT_ABS, value)
 end
 
