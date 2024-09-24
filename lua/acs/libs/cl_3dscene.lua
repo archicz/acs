@@ -1,33 +1,118 @@
-local SceneObject = {}
-SceneObject.__index = SceneObject
+if not imgui then return end
 
-function SceneObject:New()
+local SceneObjectProp = {}
+SceneObjectProp.__index = SceneObjectProp
 
+function SceneObjectProp:New() 
+    self.Model = ""
+    self.Pos = Vector(0, 0, 0)
+    self.Ang = Angle(0, 0, 0)
+    self.Scale = Vector(1, 1, 1)
+    self.DirectionalLight = {}
+    self.Entity = NULL
 end
+
+function SceneObjectProp:Draw()
+    for i = 0, 6 do
+        local col = self.DirectionalLight[i]
+	    if col then
+	        render.SetModelLighting(i, col.r / 255, col.g / 255, col.b / 255)
+	    end
+    end
+
+    if isentity(self.Entity) then
+        self.Entity:DrawModel() 
+    end
+end
+
+function SceneObjectProp:Generate()
+    local ent = ClientsideModel(self.Model)
+    if IsValid(ent) then
+        ent:SetNoDraw(true)
+        ent:SetIK(false)
+        ent:SetPos(self.Pos)
+        ent:SetAngles(self.Ang)
+
+        self.Entity = ent
+    end
+end
+
+
 
 local SceneCamera = {}
 SceneCamera.__index = SceneCamera
 
 function SceneCamera:New()
     self.Pos = Vector(0, 0, 0)
+    self.Ang = Angle(0, 0, 0)
     self.FOV = 90
+
+    self.NearZ = 4
+    self.FarZ = 4096
+
+    self.ColorMod = Color(255, 255, 255)
+    self.AmbientLight = Color(100, 100, 100)
 end
+
+
 
 local Scene = {}
 Scene.__index = Scene
 
 function Scene:New()
-
+    self.Objects = {}
+    self.Camera = false
 end
 
-function Scene:ImportPAC()
+function Scene:Draw(x, y, w, h)
+    local camera = self.Camera
+    if not camera then return end
 
+    cam.Start3D(camera.Pos, camera.Ang, camera.FOV, x, y, w, h, camera.NearZ, camera.FarZ)
+        render.SuppressEngineLighting(true)
+        render.SetLightingOrigin(Vector(0, 0, 0))
+        render.ResetModelLighting(camera.AmbientLight.r / 255, camera.AmbientLight.g / 255, camera.AmbientLight.b / 255)
+        render.SetColorModulation(camera.ColorMod.r / 255, camera.ColorMod.g / 255, camera.ColorMod.b / 255)
+        render.SetBlend(1)
+
+        render.ClearDepth(false)
+
+        for i = 1, #self.Objects do
+            self.Objects[i]:Draw()
+        end
+
+        render.SuppressEngineLighting(false)
+    cam.End3D()    
+end
+
+
+
+function imgui.SceneViewer(scene, w, h)
+    local parentW, parentH = imgui.GetLayout()
+    local x, y = imgui.GetCursor()
+
+    if w == IMGUI_SIZE_CONTENT then
+        w = parentW
+    end
+
+    if h == IMGUI_SIZE_CONTENT then
+        h = parentH
+    end
+
+    local isHovering = imgui.MouseInRect(x, y, w, h)
+    local hasClicked = imgui.HasClicked()
+
+    imgui.Draw(function()
+        scene:Draw(x, y, w, h)
+    end)
+
+    imgui.ContentAdd(w, h)
 end
 
 /*local PANEL = {}
 
 AccessorFunc( PANEL, "m_fAnimSpeed",	"AnimSpeed" )
-AccessorFunc( PANEL, "vCamPos",			"CamPos" )
+1AccessorFunc( PANEL, "vCamPos",			"CamPos" )
 AccessorFunc( PANEL, "fFOV",			"FOV" )
 AccessorFunc( PANEL, "vLookatPos",		"LookAt" )
 AccessorFunc( PANEL, "aLookAngle",		"LookAng" )
