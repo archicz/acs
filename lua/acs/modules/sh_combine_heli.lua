@@ -357,7 +357,7 @@ if CLIENT then
         local Size = 30
         local Length = 1
 
-        self.Particle = self.Emitter:Add("effects/laser1", self:GetPos())
+        self.Particle = self.Emitter:Add("acs/bullet_tracer", self:GetPos())
 		self.Particle:SetDieTime(1)
 		self.Particle:SetStartAlpha(255)
 		self.Particle:SetEndAlpha(255)
