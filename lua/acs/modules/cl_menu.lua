@@ -8,9 +8,30 @@ local chkb = false
 local sldr = 1.2
 
 local hangarScene = {}
+local hangarCamera = {}
 
 local function PrototypeScene()
+    hangarScene = interactivescene.CreateScene()
+    hangarScene:CreateCamera(Vector(175, -240, 200), Angle(30, 125, 0), 100)
+    hangarScene:SetSkybox("skybox/militia_hdr")
+    -- hangarScene:CreateCamera(Vector(0, 0, 0), Angle(0, 0, 0), 100)
 
+    local pacData = pace.luadata.ReadFile("pac3/hangar_alpha.txt")
+
+    for _, entry in pairs(pacData[1]["children"]) do
+        local partData = entry["self"]
+        
+        local prop = interactivescene.CreateProp()
+        prop:SetPos(partData["Position"])
+        prop:SetAngles(partData["Angles"])
+        prop:SetScale(partData["Scale"])
+        prop:SetDirectionalLight(BOX_TOP, Color(100, 100, 100, 255))
+        prop:SetModel(partData["Model"])
+
+        hangarScene:AddObject(prop)
+    end
+
+    hangarCamera = hangarScene:GetCamera()
 end
 
 PrototypeScene()
@@ -27,33 +48,20 @@ hook.Add("DrawOverlay", "NegrDraw", function()
 
     input.UnlockCursor()
     imgui.Context2D(ctx)
-        imgui.BeginWindow("Settings", IMGUI_POS_CENTER, IMGUI_POS_CENTER, 800, 600)
+        imgui.BeginWindow("Settings", IMGUI_POS_CENTER, IMGUI_POS_CENTER, 1280, 720)
             imgui.SetPadding(2, 2, 2, 2)
             imgui.SameLine()
 
-            imgui.BeginGroup(200, IMGUI_SIZE_CONTENT)
+            imgui.BeginGroup(300, IMGUI_SIZE_CONTENT)
                 imgui.SetPadding(2, 2, 2, 2)
-                imgui.Button("test1", IMGUI_SIZE_CONTENT, 40)
 
-                imgui.SameLine()
-                imgui.Label("label test")
-                imgui.Label("another text")
-                imgui.Label("label madness")
-
-                imgui.NewLine()
-                imgui.Label("new line")
-
-                imgui.SameLine()
-                chkb = imgui.Checkbox("test checkbox", chkb)
-                chkb = imgui.Checkbox("test checkbox", chkb)
-
-                imgui.NewLine()
-                sldr = imgui.SliderDecimal("test slider", 0, 10, sldr)
-                -- sldr = imgui.Slider("slider", 0, 10, sldr)
+                imgui.Label("Camera General")
+                hangarCamera.FOV = imgui.SliderDecimal("FOV", 10, 140, hangarCamera.FOV)
             imgui.EndGroup()
 
             imgui.BeginGroup(IMGUI_SIZE_CONTENT, IMGUI_SIZE_CONTENT)
-                
+                imgui.SetPadding(2, 2, 2, 2)
+                imgui.SceneViewer(hangarScene, IMGUI_SIZE_CONTENT, IMGUI_SIZE_CONTENT)
             imgui.EndGroup()
         imgui.EndWindow()
     imgui.ContextEnd()

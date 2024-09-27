@@ -1,40 +1,108 @@
-if not imgui then return end
+interactivescene = {}
 
 local SceneObjectProp = {}
 SceneObjectProp.__index = SceneObjectProp
 
-function SceneObjectProp:New() 
+function SceneObjectProp:New()
     self.Model = ""
     self.Pos = Vector(0, 0, 0)
     self.Ang = Angle(0, 0, 0)
     self.Scale = Vector(1, 1, 1)
-    self.DirectionalLight = {}
+    self.Lights = {}
+    self.LightOrigin = Vector(0, 0, 0)
     self.Entity = NULL
 end
 
+function SceneObjectProp:GetModel()
+    return self.Model
+end
+
+function SceneObjectProp:SetModel(model)
+    self.Model = model
+    self:Generate()
+end
+
+function SceneObjectProp:GetEntity()
+    return self.Entity
+end
+
+function SceneObjectProp:GetPos()
+    return self.Pos
+end
+
+function SceneObjectProp:SetPos(pos)
+    self.Pos = pos
+end
+
+function SceneObjectProp:GetAngles()
+    return self.Ang
+end
+
+function SceneObjectProp:SetAngles(ang)
+    self.Ang = ang
+end
+
+function SceneObjectProp:GetScale()
+    return self.Scale
+end
+
+function SceneObjectProp:SetScale(scale)
+    self.Scale = scale
+end
+
+function SceneObjectProp:GetDirectionalLight(dir)
+    return self.Lights[dir]
+end
+
+function SceneObjectProp:SetDirectionalLight(dir, intensity)
+    self.Lights[dir] = intensity
+end
+
+function SceneObjectProp:GetLightOrigin()
+    return self.LightOrigin
+end
+
+function SceneObjectProp:SetLightOrigin(pos)
+    self.LightOrigin = pos
+end
+
 function SceneObjectProp:Draw()
-    for i = 0, 6 do
-        local col = self.DirectionalLight[i]
-	    if col then
-	        render.SetModelLighting(i, col.r / 255, col.g / 255, col.b / 255)
-	    end
+    local ent = self.Entity
+    if not IsValid(ent) then return end
+
+    local lights = self.Lights
+
+    for dir = BOX_FRONT, BOX_BOTTOM do
+        local color = lights[dir]
+	    if not color then continue end
+        
+        render.SetModelLighting(dir, color.r / 255, color.g / 255, color.b / 255)
     end
 
-    if isentity(self.Entity) then
-        self.Entity:DrawModel() 
-    end
+    render.SetLightingOrigin(self.LightOrigin)
+
+    local modelMat = Matrix()
+    modelMat:Scale(self.Scale)
+
+    ent:EnableMatrix("RenderMultiply", modelMat)
+    ent:DrawModel()
 end
 
 function SceneObjectProp:Generate()
-    local ent = ClientsideModel(self.Model)
+    local ent = self:GetEntity()
     if IsValid(ent) then
-        ent:SetNoDraw(true)
-        ent:SetIK(false)
-        ent:SetPos(self.Pos)
-        ent:SetAngles(self.Ang)
-
-        self.Entity = ent
+        SafeRemoveEntity(ent)
     end
+
+    ent = ClientsideModel(self.Model)
+    if not IsValid(ent) then return end
+
+    ent:SetNoDraw(true)
+    ent:SetIK(false)
+    ent:SetPos(self.Pos)
+    ent:SetAngles(self.Ang)
+
+    self.Entity = ent
 end
 
 
@@ -42,16 +110,111 @@ end
 local SceneCamera = {}
 SceneCamera.__index = SceneCamera
 
-function SceneCamera:New()
-    self.Pos = Vector(0, 0, 0)
-    self.Ang = Angle(0, 0, 0)
-    self.FOV = 90
+function SceneCamera:New(pos, ang, fov)
+    self.Pos = pos or Vector(0, 0, 0)
+    self.Ang = ang or Angle(0, 0, 0)
+    self.FOV = fov or 90
 
     self.NearZ = 4
-    self.FarZ = 4096
+    self.FarZ = 16384
 
     self.ColorMod = Color(255, 255, 255)
-    self.AmbientLight = Color(100, 100, 100)
+    self.AmbientLight = Color(75, 75, 75)
+end
+
+function SceneCamera:GetPos()
+    return self.Pos
+end
+
+function SceneCamera:SetPos(pos)
+    self.Pos = pos
+end
+
+function SceneCamera:GetAngles()
+    return self.Ang
+end
+
+function SceneCamera:SetAngles(ang)
+    self.Ang = ang
+end
+
+function SceneCamera:LookAt(pos)
+    local dir = (self.Pos - pos)
+    dir:Normalize()
+
+    self.Ang = dir:Angle()
+end
+
+function SceneCamera:GetFOV()
+    return self.FOV
+end
+
+function SceneCamera:SetFOV(fov)
+    self.FOV = fov
+end
+
+function SceneCamera:GetColorModulation()
+    return self.ColorMod
+end
+
+function SceneCamera:SetColorModulation(color)
+    self.ColorMod = color
+end
+
+function SceneCamera:GetAmbientLight()
+    return self.AmbientLight
+end
+
+function SceneCamera:SetAmbientLight(color)
+    self.AmbientLight = color
+end
+
+
+
+local SceneSkybox = {}
+SceneSkybox.__index = SceneSkybox
+
+function SceneSkybox:New(path)
+    self.Path = ""
+end
+
+function SceneSkybox:SetPath(path)
+    self.Path = path
+    self:Generate()
+end
+
+function SceneSkybox:Generate()
+    self.MaterialFaces =
+    {
+        up = Material(self.Path .. "up"),
+        down = Material(self.Path .. "dn"),
+        left = Material(self.Path .. "lf"),
+        right = Material(self.Path .. "rt"),
+        front = Material(self.Path .. "ft"),
+        back = Material(self.Path .. "bk")
+    }
+end
+
+function SceneSkybox:Draw(pos, size)
+    if not self.MaterialFaces then return end
+
+    render.SetMaterial(self.MaterialFaces.up)
+    render.DrawQuadEasy(pos + Vector(0, 0, size / 2), Vector(0, 0, -1), size, size, 0, 180)
+
+    render.SetMaterial(self.MaterialFaces.down)
+    render.DrawQuadEasy(pos + Vector(0, 0, -size / 2), Vector(0, 0, 1), size, size, 0, 0)
+
+    render.SetMaterial(self.MaterialFaces.right)
+    render.DrawQuadEasy(pos + Vector(-size / 2, 0, 0), Vector(1, 0, 0), size, size, 0, 180)
+
+    render.SetMaterial(self.MaterialFaces.left)
+    render.DrawQuadEasy(pos + Vector(size / 2, 0, 0), Vector(-1, 0, 0), size, size, 0, 180)
+
+    render.SetMaterial(self.MaterialFaces.front)
+    render.DrawQuadEasy(pos + Vector(0, size / 2, 0), Vector(0, -1, 0), size, size, 0, 180)
+
+    render.SetMaterial(self.MaterialFaces.back)
+    render.DrawQuadEasy(pos + Vector(0, -size / 2, 0), Vector(0, 1, 0), size, size, 0, 180)
 end
 
 
@@ -61,32 +224,115 @@ Scene.__index = Scene
 
 function Scene:New()
     self.Objects = {}
-    self.Camera = false
+    self.Camera = nil
+    self.Skybox = nil
+
+    self.ViewAngles = Angle(0, 0, 0)
+end
+
+function Scene:GetCamera()
+    return self.Camera
+end
+
+function Scene:GetObjects()
+    return self.Objects
+end
+
+function Scene:CreateCamera(pos, ang, fov)
+    local camera = {}
+    setmetatable(camera, SceneCamera)
+    camera:New(pos, ang, fov)
+
+    self.Camera = camera
+    return camera
+end
+
+function Scene:SetSkybox(path)
+    if not self.Skybox then
+        local skybox = {}
+        setmetatable(skybox, SceneSkybox)
+        skybox:New()
+
+        self.Skybox = skybox
+    end
+
+    self.Skybox:SetPath(path)
+end
+
+function Scene:AddObject(obj)
+    table.insert(self.Objects, obj)
+end
+
+function Scene:PreDrawObjects()
+end
+
+function Scene:PostDrawObjects()
+end
+
+function Scene:PreDrawSkybox()
+end
+
+function Scene:PostDrawSkybox()
 end
 
 function Scene:Draw(x, y, w, h)
     local camera = self.Camera
     if not camera then return end
 
-    cam.Start3D(camera.Pos, camera.Ang, camera.FOV, x, y, w, h, camera.NearZ, camera.FarZ)
+    local up = input.IsKeyDown(KEY_PAD_8) and -1 or 0
+    local down = input.IsKeyDown(KEY_PAD_2) and 1 or 0
+
+    local left = input.IsKeyDown(KEY_PAD_4) and 1 or 0
+    local right = input.IsKeyDown(KEY_PAD_6) and -1 or 0
+
+    self.ViewAngles.p = self.ViewAngles.p + (up + down)
+    self.ViewAngles.y = self.ViewAngles.y + (left + right)
+
+    cam.Start3D(camera.Pos, camera.Ang + self.ViewAngles, camera.FOV, x, y, w, h, camera.NearZ, camera.FarZ)
+        render.Clear(0, 0, 0, 255, true, true)
+
         render.SuppressEngineLighting(true)
-        render.SetLightingOrigin(Vector(0, 0, 0))
         render.ResetModelLighting(camera.AmbientLight.r / 255, camera.AmbientLight.g / 255, camera.AmbientLight.b / 255)
         render.SetColorModulation(camera.ColorMod.r / 255, camera.ColorMod.g / 255, camera.ColorMod.b / 255)
         render.SetBlend(1)
 
-        render.ClearDepth(false)
+        if self.Skybox then
+            self:PreDrawSkybox()
+
+            self.Skybox:Draw(Vector(0, 0, 0), camera.FarZ)
+
+            self:PostDrawSkybox()
+        end
+
+        self:PreDrawObjects()
 
         for i = 1, #self.Objects do
             self.Objects[i]:Draw()
         end
 
+        self:PostDrawObjects()
+
         render.SuppressEngineLighting(false)
     cam.End3D()    
 end
 
+function interactivescene.CreateProp()
+    local instance = {}
+    setmetatable(instance, SceneObjectProp)
+    instance:New()
 
+    return instance
+end
 
+function interactivescene.CreateScene()
+    local instance = {}
+    setmetatable(instance, Scene)
+    instance:New()
+
+    return instance
+end
+
+if not imgui then return end
 function imgui.SceneViewer(scene, w, h)
     local parentW, parentH = imgui.GetLayout()
     local x, y = imgui.GetCursor()
@@ -109,129 +355,7 @@ function imgui.SceneViewer(scene, w, h)
     imgui.ContentAdd(w, h)
 end
 
-/*local PANEL = {}
-
-AccessorFunc( PANEL, "m_fAnimSpeed",	"AnimSpeed" )
-1AccessorFunc( PANEL, "vCamPos",			"CamPos" )
-AccessorFunc( PANEL, "fFOV",			"FOV" )
-AccessorFunc( PANEL, "vLookatPos",		"LookAt" )
-AccessorFunc( PANEL, "aLookAngle",		"LookAng" )
-AccessorFunc( PANEL, "colAmbientLight",	"AmbientLight" )
-AccessorFunc( PANEL, "colColor",		"Color" )
-AccessorFunc( PANEL, "bAnimated",		"Animated" )
-
-function PANEL:Init()
-	self.LastPaint = 0
-	self.DirectionalLight = {}
-	self.FarZ = 4096
-
-	self:SetCamPos( Vector( 45, 0, 70 ) )
-	self:SetLookAng( Angle(0, 180, 0) )
-	self:SetFOV( 90 )
-
-	self:SetText( "" )
-	self:SetAnimSpeed( 0.5 )
-	self:SetAnimated( false )
-
-	self:SetAmbientLight( Color( 50, 50, 50 ) )
-
-	self:SetDirectionalLight( BOX_TOP, Color( 255, 255, 255) )
-	self:SetDirectionalLight( BOX_FRONT, Color( 155, 155, 155) )
-
-	self:SetColor( color_white )
-
-    self.Props = {}
-
-    for _, entry in pairs(kokoti[1]["children"]) do
-        local partData = entry["self"]
-        
-        local prop = ClientsideModel(partData["Model"])
-        if IsValid(prop) then
-            prop:SetNoDraw(true)
-            prop:SetIK(false)
-            prop:SetPos(partData["Position"])
-            prop:SetAngles(partData["Angles"])
-
-            table.insert(self.Props, prop)
-        end
-    end
-
-end
-
-function PANEL:SetDirectionalLight( iDirection, color )
-	self.DirectionalLight[ iDirection ] = color
-end
-
-function PANEL:DrawModel()
-
-	local curparent = self
-	local leftx, topy = self:LocalToScreen( 0, 0 )
-	local rightx, bottomy = self:LocalToScreen( self:GetWide(), self:GetTall() )
-	while ( curparent:GetParent() != nil ) do
-		curparent = curparent:GetParent()
-
-		local x1, y1 = curparent:LocalToScreen( 0, 0 )
-		local x2, y2 = curparent:LocalToScreen( curparent:GetWide(), curparent:GetTall() )
-
-		leftx = math.max( leftx, x1 )
-		topy = math.max( topy, y1 )
-		rightx = math.min( rightx, x2 )
-		bottomy = math.min( bottomy, y2 )
-		previous = curparent
-	end
-
-	render.ClearDepth( false )
-
-	render.SetScissorRect( leftx, topy, rightx, bottomy, true )
-
-    for _, prop in pairs(self.Props) do
-        prop:DrawModel()
-    end
-
-	render.SetScissorRect( 0, 0, 0, 0, false )
-
-end
-
-function PANEL:Paint( w, h )
-
-	local x, y = self:LocalToScreen( 0, 0 )
-
-	local ang = self.aLookAngle
-	if ( !ang ) then
-		ang = ( self.vLookatPos - self.vCamPos ):Angle()
-	end
-
-	cam.Start3D( self.vCamPos, ang, self.fFOV, x, y, w, h, 5, self.FarZ )
-
-	render.SuppressEngineLighting( true )
-	render.SetLightingOrigin( Vector(0, 0, 0) )
-	render.ResetModelLighting( self.colAmbientLight.r / 255, self.colAmbientLight.g / 255, self.colAmbientLight.b / 255 )
-	render.SetColorModulation( self.colColor.r / 255, self.colColor.g / 255, self.colColor.b / 255 )
-	render.SetBlend( ( self:GetAlpha() / 255 ) * ( self.colColor.a / 255 ) ) -- * surface.GetAlphaMultiplier()
-
-	for i = 0, 6 do
-		local col = self.DirectionalLight[ i ]
-		if ( col ) then
-			render.SetModelLighting( i, col.r / 255, col.g / 255, col.b / 255 )
-		end
-	end
-
-	self:DrawModel()
-
-	render.SuppressEngineLighting( false )
-	cam.End3D()
-
-	self.LastPaint = RealTime()
-
-end
-
-function PANEL:OnRemove()
-end
-
-derma.DefineControl("D3DScene", "A panel containing a 3D scene", PANEL, "DButton")
-
-
-
+/*
 local nigger = false
 local prevNigger = false
 local tglNigger = false

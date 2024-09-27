@@ -40,7 +40,7 @@ ClientsideScript("libs/cl_stencilscissor.lua")
 ClientsideScript("libs/cl_mousewheel.lua")
 ClientsideScript("libs/cl_cursorunlock.lua")
 ClientsideScript("libs/cl_imgui.lua")
-ClientsideScript("libs/cl_3dscene.lua")
+ClientsideScript("libs/cl_interactivescene.lua")
 
 ServersideScript("libs/sv_damagesystem.lua")
 
