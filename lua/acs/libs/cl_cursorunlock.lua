@@ -2,6 +2,7 @@ if not input then return end
 
 local UnlockRequested = false
 local UnlockPanel = false
+local MouseWheel = 0
 
 local function ResetState()
     UnlockRequested = false
@@ -12,6 +13,8 @@ local function CheckState()
         UnlockPanel:Remove()
         UnlockPanel = false
     end
+
+    MouseWheel = 0
 end
 
 function input.UnlockCursor()
@@ -22,13 +25,23 @@ function input.UnlockCursor()
     UnlockPanel:SetSize(ScrW(), ScrH())
     UnlockPanel:SetPos(0, 0)
     UnlockPanel:SetPaintedManually(true)
+    UnlockPanel:SetDraggable(false)
+    UnlockPanel:SetSizable(false)
     UnlockPanel:MakePopup()
+
+    function UnlockPanel:OnMouseWheeled(delta)
+        MouseWheel = delta
+    end
 end
 
 function input.SetCursorType(cursorType)
     if UnlockRequested and ispanel(UnlockPanel) then
         UnlockPanel:SetCursor(cursorType) 
     end
+end
+
+function input.GetMouseWheel()
+    return MouseWheel
 end
 
 hook.Add("PreRender", "CursorUnlockReset", ResetState)
