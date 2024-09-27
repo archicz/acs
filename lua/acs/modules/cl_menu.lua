@@ -36,6 +36,8 @@ end
 
 PrototypeScene()
 
+local scroll = 0
+
 hook.Add("DrawOverlay", "NegrDraw", function()
     prevNigger = nigger
     nigger = input.IsKeyDown(KEY_F3)
@@ -52,17 +54,22 @@ hook.Add("DrawOverlay", "NegrDraw", function()
             imgui.SetPadding(2, 2, 2, 2)
             imgui.SameLine()
 
-            imgui.BeginGroup(300, IMGUI_SIZE_CONTENT)
+            imgui.BeginGroup(300, IMGUI_SIZE_CONTENT, scroll)
                 imgui.SetPadding(2, 2, 2, 2)
 
-                imgui.Label("Camera General")
-                hangarCamera.FOV = imgui.SliderDecimal("FOV", 10, 140, hangarCamera.FOV)
-            imgui.EndGroup()
+                for i = 1, 25 do
+                    hangarCamera.FOV = imgui.SliderDecimal("FOV #" .. i, 10, 140, hangarCamera.FOV)
+                    imgui.Label("Label #" .. i)
+                    imgui.Button("Button #" .. i, IMGUI_SIZE_CONTENT, 25)
+                end
+            scroll = imgui.EndGroup()
+            
+            -- print(scroll)
 
-            imgui.BeginGroup(IMGUI_SIZE_CONTENT, IMGUI_SIZE_CONTENT)
+            /*imgui.BeginGroup(IMGUI_SIZE_CONTENT, IMGUI_SIZE_CONTENT)
                 imgui.SetPadding(2, 2, 2, 2)
-                imgui.SceneViewer(hangarScene, IMGUI_SIZE_CONTENT, IMGUI_SIZE_CONTENT)
-            imgui.EndGroup()
+                -- imgui.SceneViewer(hangarScene, IMGUI_SIZE_CONTENT, IMGUI_SIZE_CONTENT)
+            imgui.EndGroup()*/
         imgui.EndWindow()
     imgui.ContextEnd()
 end)

@@ -279,6 +279,7 @@ function Scene:Draw(x, y, w, h)
     local camera = self.Camera
     if not camera then return end
 
+    // DEBUG CODE
     local up = input.IsKeyDown(KEY_PAD_8) and -1 or 0
     local down = input.IsKeyDown(KEY_PAD_2) and 1 or 0
 
@@ -287,6 +288,7 @@ function Scene:Draw(x, y, w, h)
 
     self.ViewAngles.p = self.ViewAngles.p + (up + down)
     self.ViewAngles.y = self.ViewAngles.y + (left + right)
+    // DEBUG CODE
 
     cam.Start3D(camera.Pos, camera.Ang + self.ViewAngles, camera.FOV, x, y, w, h, camera.NearZ, camera.FarZ)
         render.Clear(0, 0, 0, 255, true, true)

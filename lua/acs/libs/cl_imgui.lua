@@ -122,6 +122,8 @@ function imgui.SliderInternal(label, minValue, maxValue, valueFormat, value)
     local parentW, parentH = imgui.GetLayout()
     local x, y = imgui.GetCursor()
 
+    print("finalY slider:", y)
+
     local sliderHeight = 6
     local textSpacing = 4
     local valueText = ""
@@ -207,13 +209,28 @@ end
 
 function imgui.MouseInRect(x, y, w, h)
     local window = CurrentContext.Window
-    if not window then return false end
+    if not window then return end
 
-    return CurrentContext.MouseX >= x and CurrentContext.MouseX <= x + w and CurrentContext.MouseY >= y and CurrentContext.MouseY <= y + h
+    local active = window
+    local canvas = window.currentCanvas
+    if canvas then active = canvas end
+
+    local withinRect = CurrentContext.MouseX >= x and CurrentContext.MouseX <= x + w and CurrentContext.MouseY >= y and CurrentContext.MouseY <= y + h
+    local withinClip = CurrentContext.MouseX >= active.x and CurrentContext.MouseX <= active.x + active.w and CurrentContext.MouseY >= active.y and CurrentContext.MouseY <= active.y + active.h
+    
+    return withinRect and withinClip
 end
 
 function imgui.GetMouseX()
     return CurrentContext.MouseX
+end
+
+function imgui.GetMouseY()
+    return CurrentContext.MouseY
+end
+
+function imgui.GetMouseWheel()
+    return CurrentContext.MouseWheel
 end
 
 function imgui.HasClicked()
@@ -237,8 +254,25 @@ function imgui.GetCursor()
 
     local paddingLeft = active.paddingLeft or 0
     local paddingTop = active.paddingTop or 0
+    local paddingBottom = active.paddingBottom or 0
 
-    return x + paddingLeft, y + paddingTop
+    local finalX = x + paddingLeft
+    local finalY = y + paddingTop
+
+    if canvas and canvas.scrollable then
+        local maxY = canvas.y + canvas.h
+        canvas.scrollHeight = finalY - maxY
+
+        print("scroll height:", canvas.scrollHeight)
+        
+        print("finalY original:" , finalY)
+    
+        finalY = finalY + canvas.scrollY
+    
+        print("finalY scroll:" , finalY)
+    end
+
+    return finalX, finalY 
 end
 
 function imgui.GetLayout()
@@ -341,7 +375,7 @@ function imgui.NewLine()
     active.sameLineHeightMax = 0
 end
 
-function imgui.BeginGroup(w, h)
+function imgui.BeginGroup(w, h, scroll)
     local window = CurrentContext.Window
     if not window then return end
 
@@ -368,7 +402,10 @@ function imgui.BeginGroup(w, h)
         cursorX = x,
         cursorY = y,
         sameLine = false,
-        sameLineHeightMax = 0
+        sameLineHeightMax = 0,
+
+        scrollable = true,
+        scrollY = scroll
     }
 
     window.canvasStack:Push(canvas)
@@ -399,12 +436,27 @@ function imgui.EndGroup()
         imgui.Draw(currentCanvas.drawQueue[i])
     end
 
+    if currentCanvas.scrollable then
+        currentCanvas.scrollY = math.Clamp(currentCanvas.scrollY + CurrentContext.MouseWheel * 16, -currentCanvas.scrollHeight, 0)
+        print(currentCanvas.scrollY, currentCanvas.scrollHeight)
+        -- print(CurrentContext.MouseWheel)
+
+        print(currentCanvas.scrollHeight - currentCanvas.h)
+
+        imgui.Draw(function()
+            -- surface.SetDrawColor(220, 220, 220, 140)
+            -- surface.DrawRect(currentCanvas.x + currentCanvas.w - 4, currentCanvas.y, 2, 100)
+        end)
+    end
+
     imgui.Draw(function()
         -- render.SetStencilScissorRect(0, 0, 0, 0, false)
         render.SetScissorRect(0, 0, 0, 0, false)
     end)
 
     imgui.ContentAdd(currentCanvas.w, currentCanvas.h)
+
+    return currentCanvas.scrollY
 end
 
 function imgui.BeginWindow(title, x, y, w, h)
@@ -465,6 +517,7 @@ function imgui.Context2D(ctx)
     CurrentContext = ContextStack:Top()
 
     CurrentContext.MouseX, CurrentContext.MouseY = input.GetCursorPos()
+    CurrentContext.MouseWheel = input.GetMouseWheel()
 
     CurrentContext.PreviousLeftPressing = (CurrentContext.LeftPressing or false)
     CurrentContext.LeftPressing = input.IsMouseDown(MOUSE_LEFT)
