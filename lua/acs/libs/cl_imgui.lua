@@ -15,6 +15,26 @@ local ScrollbarWidth = 2
 local ContextStack = util.Stack()
 local CurrentContext = false
 
+function imgui.VerticalSpacer(h)
+    local parentW, parentH = imgui.GetLayout()
+
+    if h == IMGUI_SIZE_CONTENT then
+        h = parentH
+    end
+
+    imgui.ContentAdd(0, h)
+end
+
+function imgui.HorizontalSpacer(w)
+    local parentW, parentH = imgui.GetLayout()
+
+    if w == IMGUI_SIZE_CONTENT then
+        w = parentW
+    end
+
+    imgui.ContentAdd(w, 0)
+end
+
 function imgui.Button(label, w, h)
     local parentW, parentH = imgui.GetLayout()
     local x, y = imgui.GetCursor()
@@ -411,7 +431,7 @@ function imgui.BeginGroup(w, h)
     window.currentCanvas = window.canvasStack:Top()
 end
 
-function imgui.EndGroup()
+function imgui.EndGroup(noDraw)
     local window = CurrentContext.Window
     if not window then return end
 
@@ -431,10 +451,12 @@ function imgui.EndGroup()
 
     window.currentCanvas = previousCanvas
 
-    imgui.Draw(function()
-        surface.SetDrawColor(80, 80, 80)
-        surface.DrawRect(x, y, w, h)
-    end)
+    if not noDraw then
+        imgui.Draw(function()
+            surface.SetDrawColor(80, 80, 80)
+            surface.DrawRect(x, y, w, h)
+        end)
+    end
 
     imgui.Draw(function()
         render.SetScissorRect(

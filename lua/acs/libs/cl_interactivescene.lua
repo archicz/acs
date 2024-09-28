@@ -8,10 +8,10 @@ function SceneObjectProp:New()
     self.Pos = Vector(0, 0, 0)
     self.Ang = Angle(0, 0, 0)
     self.Scale = Vector(1, 1, 1)
-    self.Lights = {}
     self.LightOrigin = Vector(0, 0, 0)
     self.Entity = NULL
 
+    // DEBUG
     self.PosOffset = Vector(0, 0, 0)
     self.AngOffset = Angle(0, 0, 0)
 end
@@ -53,14 +53,6 @@ function SceneObjectProp:SetScale(scale)
     self.Scale = scale
 end
 
-function SceneObjectProp:GetDirectionalLight(dir)
-    return self.Lights[dir]
-end
-
-function SceneObjectProp:SetDirectionalLight(dir, intensity)
-    self.Lights[dir] = intensity
-end
-
 function SceneObjectProp:GetLightOrigin()
     return self.LightOrigin
 end
@@ -72,15 +64,6 @@ end
 function SceneObjectProp:Draw()
     local ent = self.Entity
     if not IsValid(ent) then return end
-
-    local lights = self.Lights
-
-    for dir = BOX_FRONT, BOX_BOTTOM do
-        local color = lights[dir]
-	    if not color then continue end
-        
-        render.SetModelLighting(dir, color.r / 255, color.g / 255, color.b / 255)
-    end
 
     render.SetLightingOrigin(self.LightOrigin)
 
@@ -104,8 +87,6 @@ function SceneObjectProp:Generate()
 
     ent:SetNoDraw(true)
     ent:SetIK(false)
-    --ent:SetPos(self.Pos)
-    --ent:SetAngles(self.Ang)
 
     self.Entity = ent
 end
@@ -293,11 +274,44 @@ end
 
 
 
+local ScenePointLight = {}
+ScenePointLight.__index = ScenePointLight
+
+function ScenePointLight:New()
+    self.type = MATERIAL_LIGHT_POINT
+    self.color = Vector(0, 0, 0)
+    self.pos = Vector(0, 0, 0)
+    self.range = 0
+    self.fiftyPercentDistance = 100
+    self.zeroPercentDistance = 200
+end
+
+function ScenePointLight:SetPos(pos)
+    self.pos = pos
+end
+
+function ScenePointLight:SetColor(color, intensity)
+    self.color.x = color.r * intensity
+    self.color.y = color.g * intensity
+    self.color.z = color.b * intensity
+end
+
+function ScenePointLight:SetMinDistance(minDist)
+    self.fiftyPercentDistance = minDist
+end
+
+function ScenePointLight:SetMaxDistance(maxDist)
+    self.zeroPercentDistance = maxDist
+end
+
+
+
 local Scene = {}
 Scene.__index = Scene
 
 function Scene:New()
     self.Objects = {}
+    self.Lights = {}
     self.Camera = nil
     self.Skybox = nil
 end
@@ -335,6 +349,10 @@ function Scene:AddObject(obj)
     table.insert(self.Objects, obj)
 end
 
+function Scene:AddLight(light)
+    table.insert(self.Lights, light)
+end
+
 function Scene:PreDrawObjects()
 end
 
@@ -347,6 +365,9 @@ end
 function Scene:PostDrawSkybox()
 end
 
+local negr = Material("sprites/light_glow02")
+local sisi = 128
+
 function Scene:Draw()
     local camera = self.Camera
     if not camera then return end
@@ -357,9 +378,22 @@ function Scene:Draw()
         self:PostDrawSkybox()
     end
 
+    local hasLights = #self.Lights > 0
+
     self:PreDrawObjects()
+        if hasLights then
+            render.SetLocalModelLights(self.Lights)
+        end
+
         for i = 1, #self.Objects do
             self.Objects[i]:Draw()
+        end
+
+        render.SetMaterial(negr)
+        render.DrawSprite(Vector(0, 0, 200), sisi, sisi, color_white)
+
+        if hasLights then
+            render.SetLocalModelLights()
         end
     self:PostDrawObjects()
 end
@@ -371,6 +405,14 @@ function Scene:DrawDirect(x, y, w, h)
     camera:Begin(x, y, w, h)
         self:Draw()
     camera:End()
+end
+
+function interactivescene.CreatePointLight()
+    local instance = {}
+    setmetatable(instance, ScenePointLight)
+    instance:New()
+
+    return instance
 end
 
 function interactivescene.CreateProp()
