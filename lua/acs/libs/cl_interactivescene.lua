@@ -11,6 +11,9 @@ function SceneObjectProp:New()
     self.Lights = {}
     self.LightOrigin = Vector(0, 0, 0)
     self.Entity = NULL
+
+    self.PosOffset = Vector(0, 0, 0)
+    self.AngOffset = Angle(0, 0, 0)
 end
 
 function SceneObjectProp:GetModel()
@@ -82,6 +85,8 @@ function SceneObjectProp:Draw()
     render.SetLightingOrigin(self.LightOrigin)
 
     local modelMat = Matrix()
+    modelMat:Translate(self.Pos + self.PosOffset)
+    modelMat:Rotate(self.Ang + self.AngOffset)
     modelMat:Scale(self.Scale)
 
     ent:EnableMatrix("RenderMultiply", modelMat)
@@ -99,8 +104,8 @@ function SceneObjectProp:Generate()
 
     ent:SetNoDraw(true)
     ent:SetIK(false)
-    ent:SetPos(self.Pos)
-    ent:SetAngles(self.Ang)
+    --ent:SetPos(self.Pos)
+    --ent:SetAngles(self.Ang)
 
     self.Entity = ent
 end
@@ -120,6 +125,14 @@ function SceneCamera:New(pos, ang, fov)
 
     self.ColorMod = Color(255, 255, 255)
     self.AmbientLight = Color(75, 75, 75)
+
+    self.ScreenX = 0
+    self.ScreenY = 0
+    self.ScreenW = 0
+    self.ScreenH = 0
+
+    // DEBUG
+    self.ViewAngles = Angle(0, 0, 0)
 end
 
 function SceneCamera:GetPos()
@@ -136,13 +149,6 @@ end
 
 function SceneCamera:SetAngles(ang)
     self.Ang = ang
-end
-
-function SceneCamera:LookAt(pos)
-    local dir = (self.Pos - pos)
-    dir:Normalize()
-
-    self.Ang = dir:Angle()
 end
 
 function SceneCamera:GetFOV()
@@ -167,6 +173,74 @@ end
 
 function SceneCamera:SetAmbientLight(color)
     self.AmbientLight = color
+end
+
+function SceneCamera:LookAt(pos)
+    local dir = (self.Pos - pos)
+    dir:Normalize()
+
+    self.Ang = dir:Angle()
+end
+
+function SceneCamera:WorldToScreen(worldPos)
+    local camPos = self.Pos
+    local camAng = self.Ang + self.ViewAngles
+    local camFOV = self.FOV
+
+    local screenW = self.ScreenW or ScrW()
+    local screenH = self.ScreenH or ScrH()
+
+    local viewDir = worldPos - camPos
+    local forward = camAng:Forward()
+    local right = camAng:Right()
+    local up = camAng:Up()
+
+    local localX = viewDir:Dot(forward)
+    local localY = viewDir:Dot(right)
+    local localZ = viewDir:Dot(up)
+
+    if localX <= 0 then
+        return false, -1, -1
+    end
+
+    local fovRad = math.rad(camFOV / 2)
+    local scale = screenW / (2 * math.tan(fovRad))
+
+    local screenX = (localY / localX) * scale + (screenW / 2)
+    local screenY = -(localZ / localX) * scale + (screenH / 2)
+
+    return true, screenX, screenY
+end
+
+function SceneCamera:Begin(x, y, w, h)
+    self.ScreenX = x
+    self.ScreenY = y
+    self.ScreenW = w
+    self.ScreenH = h
+
+    // DEBUG CODE
+    local up = input.IsKeyDown(KEY_PAD_8) and -1 or 0
+    local down = input.IsKeyDown(KEY_PAD_2) and 1 or 0
+
+    local left = input.IsKeyDown(KEY_PAD_4) and 1 or 0
+    local right = input.IsKeyDown(KEY_PAD_6) and -1 or 0
+
+    self.ViewAngles.p = self.ViewAngles.p + (up + down)
+    self.ViewAngles.y = self.ViewAngles.y + (left + right)
+    // DEBUG CODE
+
+    cam.Start3D(self.Pos, self.Ang + self.ViewAngles, self.FOV, self.ScreenX, self.ScreenY, self.ScreenW, self.ScreenH, self.NearZ, self.FarZ)
+    render.Clear(0, 0, 0, 255, true, true)
+
+    render.SuppressEngineLighting(true)
+    render.ResetModelLighting(self.AmbientLight.r / 255, self.AmbientLight.g / 255, self.AmbientLight.b / 255)
+    render.SetColorModulation(self.ColorMod.r / 255, self.ColorMod.g / 255, self.ColorMod.b / 255)
+    render.SetBlend(1)
+end
+
+function SceneCamera:End()
+    render.SuppressEngineLighting(false)
+    cam.End3D()
 end
 
 
@@ -226,8 +300,6 @@ function Scene:New()
     self.Objects = {}
     self.Camera = nil
     self.Skybox = nil
-
-    self.ViewAngles = Angle(0, 0, 0)
 end
 
 function Scene:GetCamera()
@@ -275,47 +347,30 @@ end
 function Scene:PostDrawSkybox()
 end
 
-function Scene:Draw(x, y, w, h)
+function Scene:Draw()
     local camera = self.Camera
     if not camera then return end
 
-    // DEBUG CODE
-    local up = input.IsKeyDown(KEY_PAD_8) and -1 or 0
-    local down = input.IsKeyDown(KEY_PAD_2) and 1 or 0
-
-    local left = input.IsKeyDown(KEY_PAD_4) and 1 or 0
-    local right = input.IsKeyDown(KEY_PAD_6) and -1 or 0
-
-    self.ViewAngles.p = self.ViewAngles.p + (up + down)
-    self.ViewAngles.y = self.ViewAngles.y + (left + right)
-    // DEBUG CODE
-
-    cam.Start3D(camera.Pos, camera.Ang + self.ViewAngles, camera.FOV, x, y, w, h, camera.NearZ, camera.FarZ)
-        render.Clear(0, 0, 0, 255, true, true)
-
-        render.SuppressEngineLighting(true)
-        render.ResetModelLighting(camera.AmbientLight.r / 255, camera.AmbientLight.g / 255, camera.AmbientLight.b / 255)
-        render.SetColorModulation(camera.ColorMod.r / 255, camera.ColorMod.g / 255, camera.ColorMod.b / 255)
-        render.SetBlend(1)
-
-        if self.Skybox then
-            self:PreDrawSkybox()
-
+    if self.Skybox then
+        self:PreDrawSkybox()
             self.Skybox:Draw(Vector(0, 0, 0), camera.FarZ)
+        self:PostDrawSkybox()
+    end
 
-            self:PostDrawSkybox()
-        end
-
-        self:PreDrawObjects()
-
+    self:PreDrawObjects()
         for i = 1, #self.Objects do
             self.Objects[i]:Draw()
         end
+    self:PostDrawObjects()
+end
 
-        self:PostDrawObjects()
+function Scene:DrawDirect(x, y, w, h)
+    local camera = self.Camera
+    if not camera then return end
 
-        render.SuppressEngineLighting(false)
-    cam.End3D()    
+    camera:Begin(x, y, w, h)
+        self:Draw()
+    camera:End()
 end
 
 function interactivescene.CreateProp()
@@ -351,155 +406,8 @@ function imgui.SceneViewer(scene, w, h)
     local hasClicked = imgui.HasClicked()
 
     imgui.Draw(function()
-        scene:Draw(x, y, w, h)
+        scene:DrawDirect(x, y, w, h)
     end)
 
     imgui.ContentAdd(w, h)
 end
-
-/*
-local nigger = false
-local prevNigger = false
-local tglNigger = false
-
-local ctx = {}
-local ctx2 = {}
-
-local Props = {}
-local FarZ = 4096
-
-local CamPos = Vector(45, 0, 70)
-local LookAng = Angle(0, 180, 0)
-local FOV = 100
-local AmbientLight = Color(100, 100, 100)
-local Kolour = Color(255, 255, 255)
-
-function ZapniKreteni()
-    for _, entry in pairs(kokoti[1]["children"]) do
-        local partData = entry["self"]
-        
-        local prop = ClientsideModel(partData["Model"])
-        if IsValid(prop) then
-            prop:SetNoDraw(true)
-            prop:SetIK(false)
-            prop:SetPos(partData["Position"])
-            prop:SetAngles(partData["Angles"])
-    
-            table.insert(Props, prop)
-        end
-    end
-end
-
-function Kreteni(x, y, w, h)
-    surface.SetDrawColor(50, 50, 50)
-    surface.DrawRect(x, y, w, h)
-
-    local up = input.IsKeyDown(KEY_PAD_8) and -1 or 0
-    local down = input.IsKeyDown(KEY_PAD_2) and 1 or 0
-
-    local left = input.IsKeyDown(KEY_PAD_4) and 1 or 0
-    local right = input.IsKeyDown(KEY_PAD_6) and -1 or 0
-
-    LookAng.p = LookAng.p + (up + down)
-    LookAng.y = LookAng.y + (left + right)
-
-	cam.Start3D(CamPos, LookAng, FOV, x, y, w, h, 5, FarZ)
-
-	render.SuppressEngineLighting( true )
-	render.SetLightingOrigin( Vector(0, 0, 0) )
-	render.ResetModelLighting( AmbientLight.r / 255, AmbientLight.g / 255, AmbientLight.b / 255 )
-	render.SetColorModulation( Kolour.r / 255, Kolour.g / 255, Kolour.b / 255 )
-	render.SetBlend( 1 ) -- * surface.GetAlphaMultiplier()
-
-	//for i = 0, 6 do
-	//	local col = self.DirectionalLight[ i ]
-	//	if ( col ) then
-	//		render.SetModelLighting( i, col.r / 255, col.g / 255, col.b / 255 )
-	//	end
-	//end
-
-    render.ClearDepth( false )
-    for _, prop in pairs(Props) do
-        prop:DrawModel()
-    end
-
-    local pozicka = Vector(20, 0, 75)
-    local angl = Angle(0, 90, 90)
-    local skal = 0.05
-
-    local kurzoresX, kurzoresY = input.GetCursorPos()
-    local smericek = util.AimVector(LookAng, FOV, kurzoresX - x, kurzoresY - y, w, h)
-    smericek:Normalize()
-
-    local testHovna = util.IntersectRayWithPlane(CamPos, smericek, pozicka, angl:Up())
-
-    local rozdl = pozicka - testHovna
-    local skutecneX = rozdl:Dot(-angl:Forward()) / skal
-    local skutecneY = rozdl:Dot(-angl:Right()) / skal
-
-    local sracka = Props[23]
-    local obbMin, obbMax = sracka:GetModelBounds()
-    local srackAng = sracka:GetAngles()
-    local srackPos = sracka:GetPos() + sracka:OBBCenter()
-
-    render.DrawWireframeBox(srackPos, srackAng, obbMin, obbMax, Color(255, 0, 0))
-
-    local hitPos, hitNormal, frac = util.IntersectRayWithOBB(CamPos, smericek * 1000, srackPos, srackAng, obbMin, obbMax)
-    if hitPos then
-        render.DrawLine(Vector(0, 0, 0), hitPos, Color(255, 0, 0), false)
-    end
-    
-    cam.Start3D2D(pozicka, angl, skal)
-        imgui.Context3D2D(ctx2)
-        ctx2.MouseX = skutecneX
-        ctx2.MouseY = skutecneY
-            imgui.BeginWindow("Settings", 0, 0, IMGUI_SIZE_CONTENT, IMGUI_SIZE_CONTENT)
-                imgui.SetPadding(2, 2, 2, 2)
-                
-                imgui.BeginGroup(IMGUI_SIZE_CONTENT, 44)
-                    imgui.SetPadding(2, 2, 2, 2)
-                    imgui.Button("3D2D ImGUI Test", IMGUI_SIZE_CONTENT, 40)
-                imgui.EndGroup()
-            imgui.EndWindow()
-        imgui.ContextEnd()
-
-        --surface.SetDrawColor(200, 0, 0)
-        --surface.DrawRect(skutecneX, skutecneY, 2, 2)
-    cam.End3D2D()
-
-	render.SuppressEngineLighting( false )
-	cam.End3D()
-end
-
-ZapniKreteni()
-
-hook.Add("DrawOverlay", "NegrDraw", function()
-    prevNigger = nigger
-    nigger = input.IsKeyDown(KEY_F3)
-
-    if nigger and not prevNigger then
-        tglNigger = !tglNigger
-    end
-
-    if not tglNigger then return end
-
-    input.UnlockCursor()
-    imgui.Context2D(ctx)
-        imgui.BeginWindow("Settings", IMGUI_POS_CENTER, IMGUI_POS_CENTER, 800, 600)
-            imgui.SetPadding(2, 2, 2, 2)
-            
-            imgui.BeginGroup(IMGUI_SIZE_CONTENT, 44)
-                imgui.SetPadding(2, 2, 2, 2)
-                imgui.Button("test1", IMGUI_SIZE_CONTENT, 40)
-            imgui.EndGroup()
-
-            imgui.BeginGroup(IMGUI_SIZE_CONTENT, IMGUI_SIZE_CONTENT)
-                imgui.SetPadding(2, 2, 2, 2)
-                imgui.Custom(IMGUI_SIZE_CONTENT, IMGUI_SIZE_CONTENT, Kreteni)
-            imgui.EndGroup()
-
-        imgui.EndWindow()
-    imgui.ContextEnd()
-end)
-
-*/
