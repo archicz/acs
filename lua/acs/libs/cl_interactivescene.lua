@@ -163,21 +163,16 @@ end
 function SceneObjectSprite:Draw(camera)
     if not self.Material or self.Material:IsError() then return end
 
-    -- Define sprite properties
     local pos = self.Pos
     local size = self.Size
     local color = self.Color
     local mat = self.Material
 
-    -- Get camera properties for alignment
     local camPos = camera.Pos
     local camUp = camera.Ang:Up()
     local camRight = camera.Ang:Right()
 
-    -- Calculate the four corners of the sprite, centered around `pos`
     local halfSize = size / 2
-
-    -- Re-center the quad around the position `pos`
     local topLeft = pos - camRight * halfSize + camUp * halfSize
     local topRight = pos + camRight * halfSize + camUp * halfSize
     local bottomLeft = pos - camRight * halfSize - camUp * halfSize
@@ -188,7 +183,7 @@ function SceneObjectSprite:Draw(camera)
     if self.Additive then
         render.OverrideBlend(true, BLEND_SRC_ALPHA, BLEND_ONE, BLENDFUNC_ADD)
     end
-    
+
     render.DrawQuad(topLeft, topRight, bottomRight, bottomLeft, color)
 
     if self.Additive then
@@ -273,7 +268,7 @@ end
 
 function SceneCamera:WorldToScreen(worldPos)
     local camPos = self.Pos
-    local camAng = self.Ang + self.ViewAngles
+    local camAng = self.Ang + self.ViewAngles // HAS DEBUG VARIABLE
     local camFOV = self.FOV
 
     local screenW = self.ScreenW or ScrW()
