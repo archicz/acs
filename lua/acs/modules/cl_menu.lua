@@ -13,7 +13,7 @@ local hangarCamera = {}
 local function PrototypeScene()
     hangarScene = interactivescene.CreateScene()
     hangarScene:CreateCamera(Vector(175, -240, 200), Angle(25, 125, 0), 90)
-    hangarScene:SetSkybox("skybox/militia_hdr")
+    hangarScene:SetSkybox("skybox/sky_day02_02")
     -- hangarScene:CreateCamera(Vector(0, 0, 0), Angle(0, 0, 0), 100)
 
     local pacData = pace.luadata.ReadFile("pac3/hangar_alpha.txt")
@@ -35,18 +35,18 @@ local function PrototypeScene()
     hangarCamera:SetAmbientLight(Color(0, 0, 0))
 
     local mainLight = interactivescene.CreatePointLight()
-    mainLight:SetPos(Vector(0, 0, 170))
-    mainLight:SetColor(Color(255, 255, 255), 0.05)
-    mainLight:SetMinDistance(10)
-    mainLight:SetMaxDistance(300)
+    mainLight:SetPos(Vector(0, -13, 200))
+    mainLight:SetColor(Color(102, 102, 102), 0.1)
+    mainLight:SetMinDistance(50)
+    mainLight:SetMaxDistance(350)
 
     hangarScene:AddLight(mainLight)
 
     local glowSpr = interactivescene.CreateSprite()
-    glowSpr:SetMaterial("sprites/light_glow03")
+    glowSpr:SetMaterial("sprites/light_glow02")
     glowSpr:SetAdditive(true)
-    glowSpr:SetPos(Vector(0, -13, 210))
-    glowSpr:SetSize(64)
+    glowSpr:SetPos(Vector(0, -13, 230))
+    glowSpr:SetSize(80)
 
     hangarScene:AddObject(glowSpr)
 end

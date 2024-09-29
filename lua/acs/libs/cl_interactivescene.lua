@@ -11,14 +11,14 @@ function SceneObjectProp:New()
     self.Class = INTERACTIVESCENE_CLASS_PROP
 
     self.Model = ""
-    self.Pos = vector_origin
+    self.Pos = Vector(0, 0, 0)
     self.Ang = Angle(0, 0, 0)
     self.Scale = Vector(1, 1, 1)
-    self.LightOrigin = vector_origin
+    self.LightOrigin = Vector(0, 0, 0)
     self.Entity = NULL
 
     // DEBUG
-    self.PosOffset = vector_origin
+    self.PosOffset = Vector(0, 0, 0)
     self.AngOffset = Angle(0, 0, 0)
 end
 
@@ -112,7 +112,7 @@ function SceneObjectSprite:New()
 
     self.Material = nil
     self.Additive = false
-    self.Pos = vector_origin
+    self.Pos = Vector(0, 0, 0)
     self.Size = 16
     self.Color = Color(255, 255, 255)
 end
@@ -161,22 +161,27 @@ function SceneObjectSprite:PreDraw(camera)
 end
 
 function SceneObjectSprite:Draw(camera)
-    if not type(self.Sprite) == "IMaterial" then return end
+    if not self.Material or self.Material:IsError() then return end
 
+    -- Define sprite properties
     local pos = self.Pos
     local size = self.Size
-    local color = Color(255, 255, 255)
+    local color = self.Color
     local mat = self.Material
 
+    -- Get camera properties for alignment
     local camPos = camera.Pos
     local camUp = camera.Ang:Up()
     local camRight = camera.Ang:Right()
 
+    -- Calculate the four corners of the sprite, centered around `pos`
     local halfSize = size / 2
-    local topLeft = pos - (camRight * halfSize) + (camUp * halfSize)
-    local topRight = pos + (camRight * halfSize) + (camUp * halfSize)
-    local bottomLeft = pos - (camRight * halfSize) - (camUp * halfSize)
-    local bottomRight = pos + (camRight * halfSize) - (camUp * halfSize)
+
+    -- Re-center the quad around the position `pos`
+    local topLeft = pos - camRight * halfSize + camUp * halfSize
+    local topRight = pos + camRight * halfSize + camUp * halfSize
+    local bottomLeft = pos - camRight * halfSize - camUp * halfSize
+    local bottomRight = pos + camRight * halfSize - camUp * halfSize
     
     render.SetMaterial(mat)
 
@@ -185,7 +190,7 @@ function SceneObjectSprite:Draw(camera)
     end
     
     render.DrawQuad(topLeft, topRight, bottomRight, bottomLeft, color)
-    
+
     if self.Additive then
         render.OverrideBlend(false)
     end
@@ -200,7 +205,7 @@ local SceneCamera = {}
 SceneCamera.__index = SceneCamera
 
 function SceneCamera:New(pos, ang, fov)
-    self.Pos = pos or vector_origin
+    self.Pos = pos or Vector(0, 0, 0)
     self.Ang = ang or Angle(0, 0, 0)
     self.FOV = fov or 90
 
@@ -356,7 +361,7 @@ end
 function SceneSkybox:Draw(camera)
     if not self.MaterialFaces then return end
 
-    local pos = vector_origin
+    local pos = Vector(0, 0, 0)
     local size = camera.FarZ
 
     render.SetMaterial(self.MaterialFaces.up)
@@ -385,8 +390,8 @@ ScenePointLight.__index = ScenePointLight
 
 function ScenePointLight:New()
     self.type = MATERIAL_LIGHT_POINT
-    self.color = vector_origin
-    self.pos = vector_origin
+    self.color = Vector(0, 0, 0)
+    self.pos = Vector(0, 0, 0)
     self.range = 0
     self.fiftyPercentDistance = 100
     self.zeroPercentDistance = 200
