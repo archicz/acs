@@ -1,18 +1,24 @@
 interactivescene = {}
 
+INTERACTIVESCENE_CLASS_PROP = 0
+INTERACTIVESCENE_CLASS_SPRITE = 1
+INTERACTIVESCENE_CLASS_MAX = INTERACTIVESCENE_CLASS_SPRITE
+
 local SceneObjectProp = {}
 SceneObjectProp.__index = SceneObjectProp
 
 function SceneObjectProp:New()
+    self.Class = INTERACTIVESCENE_CLASS_PROP
+
     self.Model = ""
-    self.Pos = Vector(0, 0, 0)
+    self.Pos = vector_origin
     self.Ang = Angle(0, 0, 0)
     self.Scale = Vector(1, 1, 1)
-    self.LightOrigin = Vector(0, 0, 0)
+    self.LightOrigin = vector_origin
     self.Entity = NULL
 
     // DEBUG
-    self.PosOffset = Vector(0, 0, 0)
+    self.PosOffset = vector_origin
     self.AngOffset = Angle(0, 0, 0)
 end
 
@@ -61,7 +67,10 @@ function SceneObjectProp:SetLightOrigin(pos)
     self.LightOrigin = pos
 end
 
-function SceneObjectProp:Draw()
+function SceneObjectProp:PreDraw(camera)
+end
+
+function SceneObjectProp:Draw(camera)
     local ent = self.Entity
     if not IsValid(ent) then return end
 
@@ -76,13 +85,15 @@ function SceneObjectProp:Draw()
     ent:DrawModel()
 end
 
+function SceneObjectProp:PostDraw(camera)
+end
+
 function SceneObjectProp:Generate()
-    local ent = self:GetEntity()
-    if IsValid(ent) then
-        SafeRemoveEntity(ent)
+    if IsValid(self.Entity) then
+        SafeRemoveEntity(self.Entity)
     end
 
-    ent = ClientsideModel(self.Model)
+    local ent = ClientsideModel(self.Model)
     if not IsValid(ent) then return end
 
     ent:SetNoDraw(true)
@@ -93,11 +104,103 @@ end
 
 
 
+local SceneObjectSprite = {}
+SceneObjectSprite.__index = SceneObjectSprite
+
+function SceneObjectSprite:New()
+    self.Class = INTERACTIVESCENE_CLASS_SPRITE
+
+    self.Material = nil
+    self.Additive = false
+    self.Pos = vector_origin
+    self.Size = 16
+    self.Color = Color(255, 255, 255)
+end
+
+function SceneObjectSprite:GetMaterial()
+    return self.Material
+end
+
+function SceneObjectSprite:SetMaterial(path)
+    self.Material = Material(path)
+end
+
+function SceneObjectSprite:GetAdditive()
+    return self.Additive
+end
+
+function SceneObjectSprite:SetAdditive(additive)
+    self.Additive = additive
+end
+
+function SceneObjectSprite:GetPos()
+    return self.Pos
+end
+
+function SceneObjectSprite:SetPos(pos)
+    self.Pos = pos
+end
+
+function SceneObjectSprite:GetColor()
+    return self.Color
+end
+
+function SceneObjectSprite:SetColor(color)
+    self.Color = color
+end
+
+function SceneObjectSprite:GetSize()
+    return self.Size
+end
+
+function SceneObjectSprite:SetSize(size)
+    self.Size = size
+end
+
+function SceneObjectSprite:PreDraw(camera)
+end
+
+function SceneObjectSprite:Draw(camera)
+    if not type(self.Sprite) == "IMaterial" then return end
+
+    local pos = self.Pos
+    local size = self.Size
+    local color = Color(255, 255, 255)
+    local mat = self.Material
+
+    local camPos = camera.Pos
+    local camUp = camera.Ang:Up()
+    local camRight = camera.Ang:Right()
+
+    local halfSize = size / 2
+    local topLeft = pos - (camRight * halfSize) + (camUp * halfSize)
+    local topRight = pos + (camRight * halfSize) + (camUp * halfSize)
+    local bottomLeft = pos - (camRight * halfSize) - (camUp * halfSize)
+    local bottomRight = pos + (camRight * halfSize) - (camUp * halfSize)
+    
+    render.SetMaterial(mat)
+
+    if self.Additive then
+        render.OverrideBlend(true, BLEND_SRC_ALPHA, BLEND_ONE, BLENDFUNC_ADD)
+    end
+    
+    render.DrawQuad(topLeft, topRight, bottomRight, bottomLeft, color)
+    
+    if self.Additive then
+        render.OverrideBlend(false)
+    end
+end
+
+function SceneObjectSprite:PostDraw(camera)
+end
+
+
+
 local SceneCamera = {}
 SceneCamera.__index = SceneCamera
 
 function SceneCamera:New(pos, ang, fov)
-    self.Pos = pos or Vector(0, 0, 0)
+    self.Pos = pos or vector_origin
     self.Ang = ang or Angle(0, 0, 0)
     self.FOV = fov or 90
 
@@ -250,8 +353,11 @@ function SceneSkybox:Generate()
     }
 end
 
-function SceneSkybox:Draw(pos, size)
+function SceneSkybox:Draw(camera)
     if not self.MaterialFaces then return end
+
+    local pos = vector_origin
+    local size = camera.FarZ
 
     render.SetMaterial(self.MaterialFaces.up)
     render.DrawQuadEasy(pos + Vector(0, 0, size / 2), Vector(0, 0, -1), size, size, 0, 180)
@@ -279,8 +385,8 @@ ScenePointLight.__index = ScenePointLight
 
 function ScenePointLight:New()
     self.type = MATERIAL_LIGHT_POINT
-    self.color = Vector(0, 0, 0)
-    self.pos = Vector(0, 0, 0)
+    self.color = vector_origin
+    self.pos = vector_origin
     self.range = 0
     self.fiftyPercentDistance = 100
     self.zeroPercentDistance = 200
@@ -365,16 +471,13 @@ end
 function Scene:PostDrawSkybox()
 end
 
-local negr = Material("sprites/light_glow02")
-local sisi = 128
-
 function Scene:Draw()
     local camera = self.Camera
     if not camera then return end
 
     if self.Skybox then
         self:PreDrawSkybox()
-            self.Skybox:Draw(Vector(0, 0, 0), camera.FarZ)
+            self.Skybox:Draw(camera)
         self:PostDrawSkybox()
     end
 
@@ -386,11 +489,12 @@ function Scene:Draw()
         end
 
         for i = 1, #self.Objects do
-            self.Objects[i]:Draw()
-        end
+            local obj = self.Objects[i]
 
-        render.SetMaterial(negr)
-        render.DrawSprite(Vector(0, 0, 200), sisi, sisi, color_white)
+            obj:PreDraw(camera)
+            obj:Draw(camera)
+            obj:PostDraw(camera)
+        end
 
         if hasLights then
             render.SetLocalModelLights()
@@ -418,6 +522,14 @@ end
 function interactivescene.CreateProp()
     local instance = {}
     setmetatable(instance, SceneObjectProp)
+    instance:New()
+
+    return instance
+end
+
+function interactivescene.CreateSprite()
+    local instance = {}
+    setmetatable(instance, SceneObjectSprite)
     instance:New()
 
     return instance

@@ -41,6 +41,14 @@ local function PrototypeScene()
     mainLight:SetMaxDistance(300)
 
     hangarScene:AddLight(mainLight)
+
+    local glowSpr = interactivescene.CreateSprite()
+    glowSpr:SetMaterial("sprites/light_glow03")
+    glowSpr:SetAdditive(true)
+    glowSpr:SetPos(Vector(0, -13, 210))
+    glowSpr:SetSize(64)
+
+    hangarScene:AddObject(glowSpr)
 end
 
 PrototypeScene()
@@ -81,6 +89,7 @@ hook.Add("DrawOverlay", "NegrDraw", function()
 
                     for i = 1, #sceneObjects do
                         local obj = sceneObjects[i]
+                        if obj.Class != INTERACTIVESCENE_CLASS_PROP then continue end
                         
                         if imgui.Button("#" .. i .. " " .. obj:GetModel(), IMGUI_SIZE_CONTENT, 25) then
                             selectedObj = i
