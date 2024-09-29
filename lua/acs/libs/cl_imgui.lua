@@ -10,8 +10,6 @@ local BaseWidth = 1920
 local BaseHeight = 1080
 local ScaleDPI = math.min(ScrW() / BaseWidth, ScrH() / BaseHeight)
 
-local ScrollbarWidth = 2
-
 local ContextStack = util.Stack()
 local CurrentContext = false
 
@@ -33,6 +31,51 @@ function imgui.HorizontalSpacer(w)
     end
 
     imgui.ContentAdd(w, 0)
+end
+
+function imgui.VerticalScroll(scrollWidth, inCanvas, canvas)
+    if not canvas then return end
+    if not canvas.scrollable then return end
+
+    local x, y = imgui.GetCursor()
+    local canvasHeight = canvas.h
+
+    local mouseWheelDelta = CurrentContext.MouseWheel
+    local isHovering = imgui.MouseInRect(x, y, scrollWidth, canvasHeight)
+    local scrollHeight = canvas.scrollHeight or 0
+    local canScroll = (scrollHeight > 0)
+
+    if inCanvas and not isHovering then
+        isHovering = imgui.MouseInRect(canvas.x, canvas.y, canvas.w, canvas.h)
+    end
+
+    local scrollPerc = math.abs(canvas.scrollY / scrollHeight)
+    local contentRatio = canvasHeight / (scrollHeight + canvasHeight)
+    local barHeight = math.max(contentRatio * canvasHeight, 10)
+    local barY = scrollPerc * (canvasHeight - barHeight)
+
+    if scrollPerc == 1 then barY = barY + 1 end
+	
+    if canScroll and isHovering then
+        canvas.scrollY = math.Clamp(canvas.scrollY + mouseWheelDelta * barHeight * 0.1, -scrollHeight, 0)
+    end
+
+    imgui.Draw(function()
+        surface.SetDrawColor(64, 64, 64)
+        surface.DrawRect(x, y, scrollWidth, canvasHeight)
+
+        if isHovering then
+            surface.SetDrawColor(200, 200, 200, 140)
+        else
+            surface.SetDrawColor(140, 140, 140, 140)
+        end
+        
+        surface.DrawRect(x, y + barY, scrollWidth, barHeight)
+    end)
+
+    imgui.ContentAdd(scrollWidth, canvasHeight)
+
+    return canvas.scrollY
 end
 
 function imgui.Button(label, w, h)
@@ -322,10 +365,6 @@ function imgui.SetPadding(left, top, right, bottom)
     active.paddingTop = top
     active.paddingRight = right
     active.paddingBottom = bottom
-
-    if canvas and canvas.scrollable then
-        canvas.paddingRight = canvas.paddingRight + ScrollbarWidth
-    end
 end
 
 function imgui.ContentAdd(w, h)
@@ -343,7 +382,6 @@ function imgui.ContentAdd(w, h)
 
     if active.sameLine then
         active.cursorX = active.cursorX + w + paddingRight
-        -- active.sameLineHeightLast = h
         active.sameLineHeightMax = math.max(active.sameLineHeightMax, h)
     else
         active.cursorX = active.x
@@ -351,12 +389,10 @@ function imgui.ContentAdd(w, h)
     end
 
     if canvas and canvas.scrollable then
-        local h = canvas.h
+        local canvasH = canvas.h
         local filledH = canvas.cursorY - canvas.y
-        local paddingDiff = math.abs(paddingBottom - paddingTop)
-        -- padding magic, idk
 
-        canvas.scrollHeight = math.max(filledH - h + (paddingBottom + paddingDiff), 0)
+        canvas.scrollHeight = math.max(filledH - canvasH, 0)
     end
 end
 
@@ -395,7 +431,7 @@ function imgui.NewLine()
     active.sameLineHeightMax = 0
 end
 
-function imgui.BeginGroup(w, h)
+function imgui.BeginGroup(w, h, scroll)
     local window = CurrentContext.Window
     if not window then return end
 
@@ -423,12 +459,17 @@ function imgui.BeginGroup(w, h)
         cursorY = y,
         sameLine = false,
         sameLineHeightMax = 0,
-
-        scrollable = false
     }
+
+    if scroll != nil then
+        canvas.scrollable = true
+        canvas.scrollY = scroll
+    end
 
     window.canvasStack:Push(canvas)
     window.currentCanvas = window.canvasStack:Top()
+
+    return canvas
 end
 
 function imgui.EndGroup(noDraw)
@@ -457,7 +498,7 @@ function imgui.EndGroup(noDraw)
             surface.DrawRect(x, y, w, h)
         end)
     end
-
+    
     imgui.Draw(function()
         render.SetScissorRect(
             x + paddingLeft,
@@ -477,117 +518,6 @@ function imgui.EndGroup(noDraw)
     end)
 
     imgui.ContentAdd(w, h)
-end
-
-function imgui.BeginScrollGroup(w, h, scroll)
-    local window = CurrentContext.Window
-    if not window then return end
-
-    local parentW, parentH = imgui.GetLayout()
-    local x, y = imgui.GetCursor()
-
-    if w == IMGUI_SIZE_CONTENT then
-        w = parentW
-    end
-
-    if h == IMGUI_SIZE_CONTENT then
-        h = parentH
-    end
-
-    local canvas =
-    {
-        x = x,
-        y = y,
-        w = w,
-        h = h,
-
-        drawQueue = {},
-
-        cursorX = x,
-        cursorY = y,
-        sameLine = false,
-        sameLineHeightMax = 0,
-
-        scrollable = true,
-        scrollY = scroll
-    }
-
-    window.canvasStack:Push(canvas)
-    window.currentCanvas = window.canvasStack:Top()
-end
-
-function imgui.EndScrollGroup()
-    local window = CurrentContext.Window
-    if not window then return end
-
-    local currentCanvas = window.canvasStack:Pop()
-    local previousCanvas = window.canvasStack:Top()
-    if not currentCanvas then return end
-
-    local x = currentCanvas.x
-    local y = currentCanvas.y
-    local w = currentCanvas.w
-    local h = currentCanvas.h
-
-    local paddingLeft = currentCanvas.paddingLeft or 0
-    local paddingTop = currentCanvas.paddingTop or 0
-    local paddingRight = currentCanvas.paddingRight or 0
-    local paddingBottom = currentCanvas.paddingBottom or 0
-
-    local scrollHeight = currentCanvas.scrollHeight or 0
-    local canScroll = scrollHeight > 0
-    local isHovering = imgui.MouseInRect(x, y, w, h)
-
-    if canScroll and isHovering then
-        local scrollRatio = math.abs(scrollHeight - h)
-        currentCanvas.scrollY = math.Clamp(currentCanvas.scrollY + CurrentContext.MouseWheel * scrollRatio * 0.1, -scrollHeight, 0)
-    end
-
-    window.currentCanvas = previousCanvas
-
-    imgui.Draw(function()
-        surface.SetDrawColor(80, 80, 80)
-        surface.DrawRect(x, y, w, h)
-    end)
-
-    imgui.Draw(function()
-        render.SetScissorRect(
-            x + paddingLeft,
-            y + paddingTop,
-            x + (w - paddingRight) + ScrollbarWidth,
-            y + (h - paddingBottom),
-            true
-        )
-    end)
-
-    for i = 1, #currentCanvas.drawQueue do
-        imgui.Draw(currentCanvas.drawQueue[i])
-    end
-
-    if canScroll then
-        local scrollPerc = math.abs(currentCanvas.scrollY / scrollHeight)
-        local contentRatio = h / (scrollHeight + h)
-        local barHeight = math.max(contentRatio * h, 20)
-        local barY = scrollPerc * (h - barHeight)
-        
-        imgui.Draw(function()
-            if isHovering then
-                surface.SetDrawColor(200, 200, 200, 140)
-            else
-                surface.SetDrawColor(140, 140, 140, 140)
-            end
-            
-            surface.DrawRect(x + w - paddingRight, y + barY, ScrollbarWidth, barHeight)
-        end)
-    end
-
-    imgui.Draw(function()
-        render.SetScissorRect(0, 0, 0, 0, false)
-    end)
-
-    imgui.ContentAdd(w, h)
-
-    return currentCanvas.scrollY
 end
 
 function imgui.BeginWindow(title, x, y, w, h)
