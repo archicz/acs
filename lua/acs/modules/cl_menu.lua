@@ -71,7 +71,7 @@ hook.Add("DrawOverlay", "NegrDraw", function()
 
     input.UnlockCursor()
     imgui.Context2D(ctx)
-        imgui.BeginWindow("Settings", IMGUI_POS_CENTER, IMGUI_POS_CENTER, 1280, 720)
+        imgui.BeginWindow("Settings", IMGUI_POS_CENTER, IMGUI_POS_CENTER, IMGUI_SIZE_CONTENT, IMGUI_SIZE_CONTENT)
             imgui.SetPadding(2, 2, 2, 2)
             imgui.SameLine()
 

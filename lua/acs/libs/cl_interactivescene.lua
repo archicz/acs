@@ -207,6 +207,7 @@ function SceneCamera:New(pos, ang, fov)
     self.NearZ = 4
     self.FarZ = 16384
 
+    self.Additive = false
     self.ColorMod = Color(255, 255, 255)
     self.AmbientLight = Color(75, 75, 75)
 
@@ -257,6 +258,14 @@ end
 
 function SceneCamera:SetAmbientLight(color)
     self.AmbientLight = color
+end
+
+function SceneCamera:GetAdditive()
+    return self.Additive
+end
+
+function SceneCamera:SetAdditive(additive)
+    self.Additive = additive
 end
 
 function SceneCamera:LookAt(pos)
@@ -314,8 +323,6 @@ function SceneCamera:Begin(x, y, w, h)
     // DEBUG CODE
 
     cam.Start3D(self.Pos, self.Ang + self.ViewAngles, self.FOV, self.ScreenX, self.ScreenY, self.ScreenW, self.ScreenH, self.NearZ, self.FarZ)
-    render.Clear(0, 0, 0, 255, true, true)
-
     render.SuppressEngineLighting(true)
     render.ResetModelLighting(self.AmbientLight.r / 255, self.AmbientLight.g / 255, self.AmbientLight.b / 255)
     render.SetColorModulation(self.ColorMod.r / 255, self.ColorMod.g / 255, self.ColorMod.b / 255)
@@ -541,6 +548,25 @@ function interactivescene.CreateScene()
     instance:New()
 
     return instance
+end
+
+function interactivescene.DrawRT(scene, rt)
+    local x = 0
+    local y = 0
+    local w = rt:Width()
+    local h = rt:Height()
+
+    // Death sentence to the people responsible for documenting transparency and rendertargets.
+    render.PushRenderTarget(rt)
+    render.OverrideAlphaWriteEnable(true, true)
+        render.ClearDepth()
+        render.Clear(0, 0, 0, 0)
+    
+        render.SetWriteDepthToDestAlpha(false)
+        scene:DrawDirect(x, y, w, h)
+        render.SetWriteDepthToDestAlpha(true)
+    render.OverrideAlphaWriteEnable(false)
+    render.PopRenderTarget()
 end
 
 if not imgui then return end

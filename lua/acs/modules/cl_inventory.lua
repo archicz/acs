@@ -7,13 +7,62 @@ local scroll = 0
 
 local idk = 0
 
-function CalculateMinCellWidth(totalWidth, paddingLeft, paddingRight, numItems)
+local function CalculateMinCellWidth(totalWidth, paddingLeft, paddingRight, numItems)
     local availableWidth = totalWidth - paddingLeft - paddingRight
     local totalSpacing = (numItems - 1)
     local cellWidth = (availableWidth - totalSpacing) / numItems
 
     return math.floor(cellWidth)
 end
+
+local srackaVelikost = 93
+local hovnoRT = GetRenderTarget("HOVNORTCKO", srackaVelikost, srackaVelikost)
+
+local kokotMat = CreateMaterial("itemekvinventariMAT", "UnlitGeneric",
+{
+	["$basetexture"] = hovnoRT:GetName(),
+    ["$translucent"] = 1
+});
+
+local mrdat = Material("gui/gradient_down")
+
+local scene = false
+
+local function ItemScene()
+    scene = interactivescene.CreateScene()
+    scene:CreateCamera(Vector(0, 0, 0), Angle(0, 0, 0), 60)
+    -- scene:SetSkybox("skybox/sky_day02_02")
+
+    local prop = interactivescene.CreateProp()
+    prop:SetPos(Vector(0, 0, 0))
+    prop:SetAngles(Angle(0, 0, 0))
+    prop:SetModel("models/Items/car_battery01.mdl")
+    scene:AddObject(prop)
+end
+
+function SerMe()
+    scene.Objects[1].Pos.x = 25
+    scene.Objects[1].Ang.y = CurTime() * 40
+
+    interactivescene.DrawRT(scene, hovnoRT)
+end
+
+local function ItemWidget(w, h)
+    local x, y = imgui.GetCursor()
+
+    imgui.Draw(function()
+        surface.SetDrawColor(60, 60, 60)
+        surface.DrawRect(x, y, w, h)
+        
+        surface.SetDrawColor(255, 255, 255, 255)
+        surface.SetMaterial(kokotMat)
+        surface.DrawTexturedRect(x, y, srackaVelikost, srackaVelikost)
+    end)
+
+    imgui.ContentAdd(w, h)
+end
+
+ItemScene()
 
 hook.Add("DrawOverlay", "Negr2Draw", function()
     prevNigger = nigger
@@ -24,6 +73,8 @@ hook.Add("DrawOverlay", "Negr2Draw", function()
     end
 
     if not tglNigger then return end
+
+    SerMe()
 
     input.UnlockCursor()
     imgui.Context2D(ctx)
@@ -53,7 +104,7 @@ hook.Add("DrawOverlay", "Negr2Draw", function()
                         imgui.SameLine()
 
                         for x = 1, width do
-                            imgui.Button("X", cellSize, cellSize)
+                            ItemWidget(cellSize, cellSize)
                         end
 
                         imgui.NewLine()

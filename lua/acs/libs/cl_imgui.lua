@@ -61,7 +61,7 @@ function imgui.VerticalScroll(scrollWidth, inCanvas, canvas)
     end
 
     imgui.Draw(function()
-        surface.SetDrawColor(64, 64, 64)
+        surface.SetDrawColor(80, 80, 80)
         surface.DrawRect(x, y, scrollWidth, canvasHeight)
 
         if isHovering then
