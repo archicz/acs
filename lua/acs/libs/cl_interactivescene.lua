@@ -206,6 +206,30 @@ function SceneObjectUI:New()
     self.Context = {}
 end
 
+function SceneObjectUI:GetPos()
+    return self.Pos
+end
+
+function SceneObjectUI:SetPos(pos)
+    self.Pos = pos 
+end
+
+function SceneObjectUI:GetAngles()
+    return self.Ang
+end
+
+function SceneObjectUI:SetAngles(ang)
+    self.Ang = ang
+end
+
+function SceneObjectUI:GetScale()
+    return self.Scale
+end
+
+function SceneObjectUI:SetScale(scale)
+    self.Scale = scale
+end
+
 function SceneObjectUI:DoGUI()
 end
 
@@ -238,6 +262,9 @@ function SceneObjectUI:Draw(camera)
         local diff = (pos - planeIntersect)
         planeX = diff:Dot(-ang:Forward()) / scale
         planeY = diff:Dot(-ang:Right()) / scale
+
+        planeX = math.floor(planeX)
+        planeY = math.floor(planeY)
     end
 
     cam.Start3D2D(pos, ang, scale)
@@ -379,6 +406,9 @@ function SceneCamera:Begin(x, y, w, h)
     // DEBUG CODE
 
     cam.Start3D(self.Pos, self.Ang + self.ViewAngles, self.FOV, self.ScreenX, self.ScreenY, self.ScreenW, self.ScreenH, self.NearZ, self.FarZ)
+
+    render.Clear(0, 0, 0, 0, true, true)
+
     render.SuppressEngineLighting(true)
     render.ResetModelLighting(self.AmbientLight.r / 255, self.AmbientLight.g / 255, self.AmbientLight.b / 255)
     render.SetColorModulation(self.ColorMod.r / 255, self.ColorMod.g / 255, self.ColorMod.b / 255)
