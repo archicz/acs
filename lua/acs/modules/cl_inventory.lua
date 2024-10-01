@@ -7,15 +7,7 @@ local scroll = 0
 
 local idk = 0
 
-local function CalculateMinCellWidth(totalWidth, paddingLeft, paddingRight, numItems)
-    local availableWidth = totalWidth - paddingLeft - paddingRight
-    local totalSpacing = (numItems - 1)
-    local cellWidth = (availableWidth - totalSpacing) / numItems
-
-    return math.floor(cellWidth)
-end
-
-local srackaVelikost = 93
+local srackaVelikost = 117
 local hovnoRT = GetRenderTarget("HOVNORTCKO", srackaVelikost, srackaVelikost)
 
 local kokotMat = CreateMaterial("itemekvinventariMAT", "UnlitGeneric",
@@ -31,18 +23,20 @@ local scene = false
 local function ItemScene()
     scene = interactivescene.CreateScene()
     scene:CreateCamera(Vector(0, 0, 0), Angle(0, 0, 0), 60)
-    -- scene:SetSkybox("skybox/sky_day02_02")
+    scene:SetSkybox("skybox/sky_dust")
 
     local prop = interactivescene.CreateProp()
-    prop:SetPos(Vector(0, 0, 0))
+    prop:SetPos(Vector(13, 0, 0))
     prop:SetAngles(Angle(0, 0, 0))
-    prop:SetModel("models/Items/car_battery01.mdl")
+    prop:SetModel("models/props_lab/cactus.mdl")
     scene:AddObject(prop)
+
+    function scene:PreDrawObjects()
+    end
 end
 
 function SerMe()
-    scene.Objects[1].Pos.x = 25
-    scene.Objects[1].Ang.y = CurTime() * 40
+    scene.Objects[1].Ang.y = CurTime() * 100
 
     interactivescene.DrawRT(scene, hovnoRT)
 end
@@ -88,22 +82,20 @@ hook.Add("DrawOverlay", "Negr2Draw", function()
                 imgui.SetPadding(0, 0, 0, 0)
                 imgui.SameLine()
                 
-                local scrollWidth = 8
+                local scrollWidth = 6
                 local insideW, insideH = imgui.GetLayout()
 
                 local canvas = imgui.BeginGroup(insideW - scrollWidth, insideH, scroll)
                     imgui.SetPadding(2, 2, 2, 2)
 
-                    local layoutW, layoutH = imgui.GetLayout()
-                    
-                    local width = 10
-                    local height = 20
-                    local cellSize = CalculateMinCellWidth(layoutW, 2, 2, width)
+                    local cols = 8
+                    local rows = 10
+                    local cellSize = imgui.LayoutCalculateWidth(cols)
 
-                    for y = 1, height do
+                    for y = 1, rows do
                         imgui.SameLine()
 
-                        for x = 1, width do
+                        for x = 1, cols do
                             ItemWidget(cellSize, cellSize)
                         end
 

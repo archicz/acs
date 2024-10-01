@@ -37,7 +37,6 @@ local function PrototypeScene()
     mainLight:SetColor(Color(102, 102, 102), 0.1)
     mainLight:SetMinDistance(50)
     mainLight:SetMaxDistance(350)
-
     hangarScene:AddLight(mainLight)
 
     local glowSpr = interactivescene.CreateSprite()
@@ -45,8 +44,28 @@ local function PrototypeScene()
     glowSpr:SetAdditive(true)
     glowSpr:SetPos(Vector(0, -13, 230))
     glowSpr:SetSize(80)
-
     hangarScene:AddObject(glowSpr)
+
+    local ui = interactivescene.CreateUI()
+    ui:SetPos(Vector(100, -200, 200))
+    ui:SetAngles(Angle(0, 45, 90))
+    ui:SetScale(0.1)
+
+    local sracka = 0
+    local kokot = false
+
+    function ui:DoGUI()
+        imgui.BeginWindow("3D UI", IMGUI_POS_CENTER, IMGUI_POS_CENTER, IMGUI_SIZE_CONTENT, IMGUI_SIZE_CONTENT)
+            imgui.SetPadding(2, 2, 2, 2)
+            
+            imgui.Button("Test", IMGUI_SIZE_CONTENT, 50)
+            sracka = imgui.SliderDecimal("Slider", 0, 10, sracka)
+            kokot = imgui.Checkbox("Checkbox", kokot)
+            imgui.Button("Test 2", IMGUI_SIZE_CONTENT, 50)
+        imgui.EndWindow()
+    end
+
+    hangarScene:AddObject(ui)
 end
 
 PrototypeScene()
