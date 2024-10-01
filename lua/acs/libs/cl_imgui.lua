@@ -13,6 +13,44 @@ local ScaleDPI = math.min(ScrW() / BaseWidth, ScrH() / BaseHeight)
 local ContextStack = util.Stack()
 local CurrentContext = false
 
+function imgui.LayoutCalculateWidth(numWidgets)
+    local window = CurrentContext.Window
+    if not window then return end
+
+    local active = window
+    local canvas = window.currentCanvas
+    if canvas then active = canvas end
+
+    local paddingLeft = active.paddingLeft or 0
+    local paddingRight = active.paddingTop or 0
+
+    local layoutW, layoutH = imgui.GetLayout()
+    local availableWidth = layoutW - paddingLeft - paddingRight
+    local totalSpacing = (numWidgets - 1)
+    local cellWidth = (availableWidth - totalSpacing) / numWidgets
+
+    return math.floor(cellWidth)
+end
+
+function imgui.LayoutCalculateHeight(numWidgets)
+    local window = CurrentContext.Window
+    if not window then return end
+
+    local active = window
+    local canvas = window.currentCanvas
+    if canvas then active = canvas end
+
+    local paddingTop = active.paddingTop or 0
+    local paddingBottom = active.paddingBottom or 0
+
+    local layoutW, layoutH = imgui.GetLayout()
+    local availableHeight = layoutH - paddingTop - paddingBottom
+    local totalSpacing = (numWidgets - 1)
+    local cellHeight = (availableHeight - totalSpacing) / numWidgets
+
+    return math.floor(cellHeight)
+end
+
 function imgui.VerticalSpacer(h)
     local parentW, parentH = imgui.GetLayout()
 
@@ -61,7 +99,7 @@ function imgui.VerticalScroll(scrollWidth, inCanvas, canvas)
     end
 
     imgui.Draw(function()
-        surface.SetDrawColor(80, 80, 80)
+        surface.SetDrawColor(70, 70, 70)
         surface.DrawRect(x, y, scrollWidth, canvasHeight)
 
         if isHovering then
@@ -591,6 +629,27 @@ function imgui.Context2D(ctx)
     CurrentContext.Window = nil
     CurrentContext.MaxWidth = ScrW()
     CurrentContext.MaxHeight = ScrH()
+end
+
+function imgui.Context3D2D(ctx, mx, my, leftClick)
+    ContextStack:Push(ctx)
+    CurrentContext = ContextStack:Top()
+
+    CurrentContext.MouseX = mx
+    CurrentContext.MouseY = my
+    CurrentContext.MouseWheel = 0 //input.GetMouseWheel()
+
+    CurrentContext.PreviousLeftPressing = (CurrentContext.LeftPressing or false)
+    CurrentContext.LeftPressing = leftClick
+    CurrentContext.LeftPressed = (CurrentContext.LeftPressing and not CurrentContext.PreviousLeftPressing)
+
+    CurrentContext.PreviousRightPressing = false
+    CurrentContext.RightPressing = false
+    CurrentContext.RightPressed = false
+
+    CurrentContext.Window = nil
+    CurrentContext.MaxWidth = 512
+    CurrentContext.MaxHeight = 512
 end
 
 function imgui.ContextEnd()
