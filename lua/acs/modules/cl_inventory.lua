@@ -10,11 +10,8 @@ local idk = 0
 local srackaVelikost = 117
 local hovnoRT = GetRenderTarget("HOVNORTCKO", srackaVelikost, srackaVelikost)
 
-local kokotMat = CreateMaterial("itemekvinventariMAT", "UnlitGeneric",
-{
-	["$basetexture"] = hovnoRT:GetName(),
-    ["$translucent"] = 1
-});
+local kokotMat = Material("pp/scanlines")
+kokotMat:SetTexture("$basetexture", hovnoRT:GetName())
 
 local mrdat = Material("gui/gradient_down")
 
@@ -23,16 +20,33 @@ local scene = false
 local function ItemScene()
     scene = interactivescene.CreateScene()
     scene:CreateCamera(Vector(0, 0, 0), Angle(0, 0, 0), 60)
-    scene:SetSkybox("skybox/sky_dust")
-
-    local prop = interactivescene.CreateProp()
-    prop:SetPos(Vector(13, 0, 0))
-    prop:SetAngles(Angle(0, 0, 0))
-    prop:SetModel("models/props_lab/cactus.mdl")
-    scene:AddObject(prop)
+    -- scene:SetSkybox("skybox/sky_dust")
 
     function scene:PreDrawObjects()
+        local camera = self.Camera
+        local w = camera.ScreenW
+        local h = camera.ScreenH
+
+        cam.Start2D()
+        surface.SetDrawColor(87, 0, 200, 200)
+        surface.SetMaterial(mrdat)
+        surface.DrawTexturedRect(2, 2, w - 4, h - 4)
+        cam.End2D()
     end
+
+    function scene:PostDrawObjects()
+
+    end
+
+    local prop = interactivescene.CreateProp()
+    prop:SetPos(Vector(15, 0, -7))
+    prop:SetAngles(Angle(0, 0, 0))
+    prop:SetModel("models/Items/battery.mdl")
+    scene:AddObject(prop)
+end
+
+function PojebSveta()
+    return kokotMat
 end
 
 function SerMe()
@@ -51,6 +65,20 @@ local function ItemWidget(w, h)
         surface.SetDrawColor(255, 255, 255, 255)
         surface.SetMaterial(kokotMat)
         surface.DrawTexturedRect(x, y, srackaVelikost, srackaVelikost)
+        
+        local captionH = 16
+
+        surface.SetFont("DermaDefault")
+        local text = "Pivo"
+        local textW, textH = surface.GetTextSize(text)
+
+        surface.SetDrawColor(8, 8, 8, 200)
+        surface.DrawRect(x + 2, y + w - captionH - 2, w - 4, captionH)
+
+        surface.SetDrawColor(255, 255, 255, 255)
+        surface.SetTextPos(x + (w - 4) / 2 - textW / 2, y + (w - captionH - 2) + captionH / 2 - textH / 2)
+        surface.SetFont("DermaDefault")
+        surface.DrawText(text)
     end)
 
     imgui.ContentAdd(w, h)
@@ -78,7 +106,7 @@ hook.Add("DrawOverlay", "Negr2Draw", function()
 
             local spaceW, spaceH = imgui.GetLayout()
 
-            imgui.BeginGroup(spaceW * 0.75, IMGUI_SIZE_CONTENT)
+            imgui.BeginGroup(spaceW * 0.75 + 3, IMGUI_SIZE_CONTENT)
                 imgui.SetPadding(0, 0, 0, 0)
                 imgui.SameLine()
                 
