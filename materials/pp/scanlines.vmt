@@ -1,7 +1,7 @@
 "UnlitTwoTexture"
 {
-	"$basetexture" "effects/silodisplay_forestcams_001"
-	"$surfaceprop" "glass"
+    "$basetexture" "null"
+    "$surfaceprop" "glass"
 	"$texture2"	"dev/dev_scanline"
 
 	"$one"		1
