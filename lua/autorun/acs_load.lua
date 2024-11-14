@@ -66,5 +66,5 @@ ServersideScript("libs/sv_helisystem.lua")
 -- Modules
 SharedScript("modules/sh_missiles.lua")
 SharedScript("modules/sh_combine_heli.lua")
-ClientsideScript("modules/cl_menu.lua")
-ClientsideScript("modules/cl_inventory.lua")
+-- ClientsideScript("modules/cl_menu.lua")
+-- ClientsideScript("modules/cl_inventory.lua")
