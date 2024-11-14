@@ -615,6 +615,21 @@ function imgui.Context2D(ctx)
     ContextStack:Push(ctx)
     CurrentContext = ContextStack:Top()
 
+    CurrentContext.Window = nil
+    CurrentContext.MaxWidth = ScrW()
+    CurrentContext.MaxHeight = ScrH()
+end
+
+function imgui.Context3D2D(ctx)
+    ContextStack:Push(ctx)
+    CurrentContext = ContextStack:Top()
+
+    CurrentContext.Window = nil
+    CurrentContext.MaxWidth = 512
+    CurrentContext.MaxHeight = 512
+end
+
+function imgui.PushInput()
     CurrentContext.MouseX, CurrentContext.MouseY = input.GetCursorPos()
     CurrentContext.MouseWheel = input.GetMouseWheel()
 
@@ -625,19 +640,12 @@ function imgui.Context2D(ctx)
     CurrentContext.PreviousRightPressing = (CurrentContext.RightPressing or false)
     CurrentContext.RightPressing = input.IsMouseDown(MOUSE_RIGHT)
     CurrentContext.RightPressed = (CurrentContext.RightPressing and not CurrentContext.PreviousRightPressing)
-
-    CurrentContext.Window = nil
-    CurrentContext.MaxWidth = ScrW()
-    CurrentContext.MaxHeight = ScrH()
 end
 
-function imgui.Context3D2D(ctx, mx, my, leftClick)
-    ContextStack:Push(ctx)
-    CurrentContext = ContextStack:Top()
-
-    CurrentContext.MouseX = mx
-    CurrentContext.MouseY = my
-    CurrentContext.MouseWheel = 0 //input.GetMouseWheel()
+function imgui.PushInput3D(x, y, leftClick)
+    CurrentContext.MouseX = x
+    CurrentContext.MouseY = y
+    CurrentContext.MouseWheel = 0
 
     CurrentContext.PreviousLeftPressing = (CurrentContext.LeftPressing or false)
     CurrentContext.LeftPressing = leftClick
@@ -646,10 +654,6 @@ function imgui.Context3D2D(ctx, mx, my, leftClick)
     CurrentContext.PreviousRightPressing = false
     CurrentContext.RightPressing = false
     CurrentContext.RightPressed = false
-
-    CurrentContext.Window = nil
-    CurrentContext.MaxWidth = 512
-    CurrentContext.MaxHeight = 512
 end
 
 function imgui.ContextEnd()
