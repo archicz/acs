@@ -23,123 +23,55 @@ if CLIENT then
         vehicleseat.ControlWeaponSelection(button)
     end
 
-    function PilotSeat:Draw()
+    local ctx = {}
+
+    function PilotSeat:DrawOverlay()
         local heliEnt = self:GetVehicle()
-
-        local hudPos = self:LocalToWorld(vehicleseat.GetLookPos() + Vector(0, 20, 0))
-        local hudAng = self:LocalToWorldAngles(Angle(0, 0, 90))
-
         local throttle = heliEnt:GetThrottle()
+        -- vehicleseat.GetEntraceAnimFraction()
 
-        /*cam.Start3DUI(hudPos, hudAng, 0.03)
-            render.Clear(0, 0, 0, 0, true, true)
+        cam.Start2D()
+            local wps = vehicleseat.GetWeapons()
+            local numWps = #wps
+            local activeWpnID = vehicleseat.GetSelectedWeaponIndex()
 
-            --surface.SetDrawColor(255, 255, 255)
-            --surface.DrawOutlinedRect(0, 0, 512, 512, 2)
+            local wpnBoxSize = 96
+            local wpnBoxPadding = 4
 
-            local centerX = 512 / 2
-            local centerY = 512 / 2
+            local wpnBoxCaptionHeight = 16
 
-            local heliForward = heliEnt:GetForward()
-            local forwardAng = heliForward:Angle()
-            forwardAng:Normalize()
+            local wpnBoxesWidth = numWps * wpnBoxSize + (numWps - 1) * wpnBoxPadding
+            local wpnBoxesHeight = wpnBoxSize
 
-            local heliUp = heliEnt:GetUp()
-            local upAng = heliUp:Angle()
-            upAng:Normalize()
+            local wpnBoxesX = (ScrW() / 2) - (wpnBoxesWidth / 2)
+            local wpnBoxesY = ScrH() - wpnBoxesHeight - wpnBoxPadding
 
-            local pitch = -forwardAng.p
-            local yaw = forwardAng.y
-            local roll = -heliEnt:GetAngles().r
+            --surface.SetDrawColor(255, 0, 0)
+            --surface.DrawRect(wpnBoxesX, wpnBoxesY, wpnBoxesWidth, wpnBoxesHeight)
 
-            local pitchLadderSpacing = 250
-            local degPerPitchLadder = 5
-            local pitchLadderNum = (180 / degPerPitchLadder)
-            local pitchLadderSpace = 100
-            local pitchLadderWidth = 60
-            local pitchLadderHeight = 2
+            local curX = wpnBoxesX
+            local curY = wpnBoxesY
 
-            local yawLadderSpacing = 100
-            local degPerYawLadder = 5
-            local yawLadderNum = (360 / degPerYawLadder)
-            local yawLadderSpace = 40
-            local yawLadderHeight = 20
-            local yawLadderWidth = 2
+            for i = 1, numWps do
+                surface.SetDrawColor(32, 32, 32)
+                surface.DrawRect(curX, curY, wpnBoxSize, wpnBoxSize)
 
-            local crossWidth = 70
-            local crossHeight = 2
-            local crossSpacing = 25
+                local wpn = wps[i]
+                local wpnName = wpn:WeaponData("printName")
 
-            local textColor = Color(30, 255, 0)
-            local shapeColor = Color(30, 255, 0)
+                surface.SetDrawColor(48, 48, 48, 100)
+                surface.DrawRect(curX, curY + wpnBoxSize - wpnBoxCaptionHeight, wpnBoxSize, wpnBoxCaptionHeight)
 
-            local pitchLadderMat = Matrix()
-            pitchLadderMat:Translate(Vector(centerX, centerY, 0))
-            pitchLadderMat:Rotate(Angle(0, roll, 0))
+                surface.SetFont("DermaDefault")
+                local tw, th = surface.GetTextSize(wpnName)
 
-            local yawLadderMat = Matrix()
-            yawLadderMat:Translate(Vector(centerX, centerY, 0))
+                surface.SetTextColor(255, 255, 255)
+                surface.SetTextPos(curX + wpnBoxSize / 2 - tw / 2, curY + wpnBoxSize - wpnBoxCaptionHeight / 2 - th / 2)
+                surface.DrawText(wpnName)
 
-            cam.PushModelMatrix(pitchLadderMat, true)
-                surface.SetDrawColor(shapeColor)
-                surface.DrawRect(-crossWidth - crossSpacing, 0, crossWidth, crossHeight)
-
-                surface.SetDrawColor(shapeColor)
-                surface.DrawRect(crossSpacing, 0, crossWidth, crossHeight)
-                //drawRotatedRect(-11, 0, 2, -15, 45)
-                //drawRotatedRect(10, 1, 2, -15, -45)
-
-                for i = 0, pitchLadderNum do
-                    local angNumber = -1 * math.floor((pitchLadderNum / 2 - i) * (180 / pitchLadderNum))
-                    if math.abs(angNumber) == 0 then angNumber = 0 end
-
-                    local offset = (angNumber % 10) > 0 and 30 or 0
-                    local y = (pitchLadderNum / 2 - i) * pitchLadderSpacing + pitch * (pitchLadderSpacing *  (pitchLadderNum / 180))
-                    
-                    surface.SetDrawColor(shapeColor)
-                    surface.DrawRect(pitchLadderSpace + offset, y - 2 + pitchLadderHeight / 2, pitchLadderWidth - offset, pitchLadderHeight)
-
-                    surface.SetDrawColor(shapeColor)
-                    surface.DrawRect(pitchLadderSpace + offset, y - 2 + pitchLadderHeight / 2, 2, 10)
-                    
-                    draw.SimpleText("" .. angNumber, "ChatFont", 0, y, textColor, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-
-                    surface.SetDrawColor(shapeColor)
-                    surface.DrawRect(-pitchLadderSpace - pitchLadderWidth, y - 2 + pitchLadderHeight / 2, pitchLadderWidth - offset, pitchLadderHeight)
-
-                    surface.SetDrawColor(shapeColor)
-                    surface.DrawRect(-pitchLadderSpace - offset, y - 2 + pitchLadderHeight / 2, 2, 10)
-                end
-            cam.PopModelMatrix()
-
-            cam.PushModelMatrix(yawLadderMat, true)
-                for i = 0, yawLadderNum do
-                    local angNumber = -1 * math.floor((yawLadderNum / 2 - i) * (360 / yawLadderNum))
-                    if math.abs(angNumber) == 0 then angNumber = 0 end
-
-                    local offset = (angNumber % 10) > 0 and 10 or 0
-                    local x = (yawLadderNum / 2 - i) * yawLadderSpacing + yaw * (yawLadderSpacing *  (yawLadderNum / 360))
-                    local y = -centerY + yawLadderHeight * 2
-
-                    surface.SetDrawColor(shapeColor)
-                    surface.DrawRect(x, y, yawLadderWidth, yawLadderHeight - offset)
-
-                    surface.SetDrawColor(shapeColor)
-                    surface.DrawRect(x - 10, y, 20, 2)
-
-                    draw.SimpleText("" .. angNumber, "ChatFont", x, y - 10, textColor, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-                end
-            cam.PopModelMatrix()
-
-            --print("valid seat", vehicleseat.IsValid())
-            --print("has weapons", vehicleseat.HasWeapons())
-            --print("tbl weapons", vehicleseat.GetWeapons())
-
-            local selectedWeapon = vehicleseat.GetSelectedWeapon()
-            if selectedWeapon then
-                draw.SimpleText(selectedWeapon:WeaponData("printName"), "ChatFont", centerX, centerY, textColor, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER) 
+                curX = curX + wpnBoxSize + ((i != numWps) and wpnBoxPadding or 0)
             end
-        cam.End3DUI()*/
+        cam.End2D()
     end
 
     function PilotSeat:CreateMove(cmd)
@@ -452,6 +384,25 @@ if CLIENT then
     end
 end
 
+local StingerMissile =
+{
+    speedDuration = 2,
+    speedMax = 2400,
+
+    blastDamage = 140,
+    blastDistance = 400,
+    fuseHull = Vector(10, 10, 10),
+    fuseDist = 30,
+    
+    guided = true,
+    predicts = true,
+    angDiff = 75,
+    angMul = 40,
+
+    mdl = "models/acs/missiles/default.mdl"
+}
+
+missilesystem.Register("stinger", StingerMissile)
 vehicleseat.Register("combine_heli_pilot", PilotSeat)
 helisystem.Register("combine_heli", CombineHeli)
 vehicleweapon.Register("missile_launcher", MissileLauncher)
