@@ -41,6 +41,26 @@ function vehicleseat.CanFreelook()
     return true
 end
 
+function vehicleseat.GetEntraceAnimFraction()
+    local seatName = ActiveSeatName
+    if not seatName then return 0 end
+
+    local seatTbl = vehicleseat.Get(seatName)
+    if not seatTbl then return 0 end
+
+    if seatTbl.animatedEntrance then
+        local totalAnimDuration = seatTbl.entranceDuration
+        local remainingDuration = EntranceAnimEnd - CurTime()
+
+        if remainingDuration > 0 then
+            local remainingPercent = 1 - (remainingDuration / totalAnimDuration)
+            return remainingPercent
+        end
+    end
+
+    return 1
+end
+
 function vehicleseat.GetFreelookAngles()
     return Angle(FreelookPitch, FreelookYaw, 0)
 end
@@ -96,14 +116,14 @@ function vehicleseat.OnSeatExit()
     ActiveSeatName = false
 end
 
-function vehicleseat.Draw()
+function vehicleseat.DrawHUD()
     local seatEnt = ActiveSeat
     if not IsValid(seatEnt) then return end
 
     local seatName = ActiveSeatName
     if not seatName then return end
 
-    return vehicleseat.Call(seatName, "Draw", seatEnt)
+    return vehicleseat.Call(seatName, "DrawHUD", seatEnt)
 end
 
 function vehicleseat.CalcView(_, pos, angles, fov)
@@ -120,8 +140,7 @@ function vehicleseat.CalcView(_, pos, angles, fov)
     local viewAng = seatEnt:LocalToWorldAngles(seatTbl.viewAng + vehicleseat.GetFreelookAngles())
 
     if seatTbl.animatedEntrance and CurTime() < EntranceAnimEnd then
-        local endDelta = EntranceAnimEnd - CurTime()
-        local frac = 1 - math.Clamp(endDelta / seatTbl.entranceDuration, 0, 1)
+        local frac = vehicleseat.GetEntraceAnimFraction()
 
         viewPos = LerpVector(frac, EntranceEyePos, viewPos)
         viewAng = LerpAngle(frac, EntranceEyeAng, viewAng)
@@ -216,7 +235,7 @@ function vehicleseat.ServerNetwork()
     end
 end
 
-hook.Add("PostDrawOpaqueRenderables", "VehicleSeatDraw", vehicleseat.Draw)
+hook.Add("PreDrawEffects", "VehicleSeatDrawHUD", vehicleseat.DrawHUD)
 hook.Add("CalcView", "VehicleSeatView", vehicleseat.CalcView)
 hook.Add("CreateMove", "VehicleSeatControl", vehicleseat.CreateMove)
 hook.Add("PlayerButtonDown", "VehicleSeatControl+", vehicleseat.PlayerButtonDown)

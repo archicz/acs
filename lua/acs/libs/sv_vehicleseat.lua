@@ -98,7 +98,7 @@ function vehicleseat.ClientNetwork(_, ply)
 end
 
 hook.Add("StartCommand", "VehicleSeatControls", vehicleseat.StartCommand)
-hook.Add("PlayerButtonDown", "VehicleSeatControl+", vehicleseat.PlayerButtonDown)
+hook.Add("PlayerButtonDown", "VehicleSeatControls+", vehicleseat.PlayerButtonDown)
 net.Receive(vehicleseat.NetworkString, vehicleseat.ClientNetwork)
 
 local PlyMeta = FindMetaTable("Player")
