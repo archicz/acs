@@ -44,7 +44,13 @@ function vehicleseat.Call(name, fn, ...)
     local tblFn = seatTbl[fn]
     if not tblFn then return end
 
-    return tblFn(...)
+    local succ, data = pcall(tblFn, ...)
+    if not succ then
+        print(string.format("Vehicle Seat [%s:%s] Error: %s", name, fn, data))
+        return 
+    end
+
+    return data
 end
 
 function vehicleseat.Register(name, seatTbl)

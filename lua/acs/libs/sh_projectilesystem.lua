@@ -120,7 +120,13 @@ function projectilesystem.Call(name, fn, ...)
     local tblFn = projTbl[fn]
     if not tblFn then return end
 
-    return tblFn(...)
+    local succ, data = pcall(tblFn, ...)
+    if not succ then
+        print(string.format("Projectile [%s:%s] Error: %s", name, fn, data))
+        return 
+    end
+
+    return data
 end
 
 function projectilesystem.Register(name, projTbl)
