@@ -18,7 +18,7 @@ end
 function ENT:SeatData(key)
     local name = self:GetSeatName()
     local seatTbl = vehicleseat.Get(name)
-    return seatTbl[key]
+    return seatTbl[key] or nil
 end
 
 function ENT:SetupDataTables()
