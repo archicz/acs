@@ -19,6 +19,34 @@ function ENT:WeaponSetup(wpnName)
     self:WeaponAddAmmo(self:WeaponData("defaultAmmo"))
 end
 
+function ENT:WeaponClipReload()
+    local clip = self:GetClip()
+    local clipRemaining = self:WeaponData("clipSize") - clip
+    local ammo = self:GetAmmo()
+    local ammoToTake = math.Clamp(clipRemaining, 0, ammo)
+
+    self:WeaponAddAmmo(-ammoToTake)
+    self:WeaponAddClip(ammoToTake)
+end
+
+function ENT:WeaponTakeAmmo(amount)
+    if not amount then amount = 1 end
+
+    if self:WeaponUsesClips() then
+        self:WeaponAddClip(-amount)
+    else
+        self:WeaponAddAmmo(-amount)
+    end
+end
+
+function ENT:WeaponAddClip(amount)
+    local desiredClip = self:GetClip() + amount
+    local clipSize = self:WeaponData("clipSize")
+    local newClip = math.Clamp(desiredClip, 0, clipSize)
+
+    self:SetClip(newClip)
+end
+
 function ENT:WeaponAddAmmo(amount)
     local desiredAmmo = self:GetAmmo() + amount
     local maxAmmo = self:WeaponData("maxAmmo")
@@ -51,10 +79,12 @@ end
 
 function ENT:WeaponPrimaryFire()
     local nextPrimary = self:GetNextPrimaryFire()
-    if CurTime() >= nextPrimary then
-        self:WeaponCall("PrimaryFire")
+    local canPrimary = self:WeaponCanPrimary()
 
+    if CurTime() >= nextPrimary and canPrimary then
+        self:WeaponCall("PrimaryFire")
         self:SetNextPrimaryFire(CurTime() + self:WeaponData("primaryFireRate"))
+        
         return true
     end
 
