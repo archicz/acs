@@ -6,10 +6,6 @@ IMGUI_SIZE_CONTENT = -1
 IMGUI_SLIDER_FORMAT_ABS = 0
 IMGUI_SLIDER_FORMAT_DEC = 1
 
-local BaseWidth = 1920
-local BaseHeight = 1080
-local ScaleDPI = math.min(ScrW() / BaseWidth, ScrH() / BaseHeight)
-
 local ContextStack = util.Stack()
 local CurrentContext = false
 
@@ -78,7 +74,7 @@ function imgui.VerticalScroll(scrollWidth, inCanvas, canvas)
     local x, y = imgui.GetCursor()
     local canvasHeight = canvas.h
 
-    local mouseWheelDelta = CurrentContext.MouseWheel
+    local mouseWheelDelta = imgui.GetMouseWheel()
     local isHovering = imgui.MouseInRect(x, y, scrollWidth, canvasHeight)
     local scrollHeight = canvas.scrollHeight or 0
     local canScroll = (scrollHeight > 0)
@@ -313,30 +309,33 @@ function imgui.MouseInRect(x, y, w, h)
     local canvas = window.currentCanvas
     if canvas then active = canvas end
 
-    local withinRect = CurrentContext.MouseX >= x and CurrentContext.MouseX <= x + w and CurrentContext.MouseY >= y and CurrentContext.MouseY <= y + h
-    local withinClip = CurrentContext.MouseX >= active.x and CurrentContext.MouseX <= active.x + active.w and CurrentContext.MouseY >= active.y and CurrentContext.MouseY <= active.y + active.h
+    local mx = imgui.GetMouseX()
+    local my = imgui.GetMouseY()
+
+    local withinRect = mx >= x and mx <= x + w and my >= y and my <= y + h
+    local withinClip = mx >= active.x and mx <= active.x + active.w and my >= active.y and my <= active.y + active.h
     
     return withinRect and withinClip
 end
 
 function imgui.GetMouseX()
-    return CurrentContext.MouseX
+    return CurrentContext.MouseX or 0
 end
 
 function imgui.GetMouseY()
-    return CurrentContext.MouseY
+    return CurrentContext.MouseY or 0
 end
 
 function imgui.GetMouseWheel()
-    return CurrentContext.MouseWheel
+    return CurrentContext.MouseWheel or 0
 end
 
 function imgui.HasClicked()
-    return CurrentContext.LeftPressed
+    return CurrentContext.LeftPressed or false
 end
 
 function imgui.IsPressing()
-    return CurrentContext.LeftPressing
+    return CurrentContext.LeftPressing or false
 end
 
 function imgui.GetCursor()
