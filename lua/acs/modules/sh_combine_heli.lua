@@ -25,12 +25,16 @@ if CLIENT then
 
     local ctx = {}
 
-    function PilotSeat:DrawOverlay()
+    function PilotSeat:DrawHUD()
         local heliEnt = self:GetVehicle()
         local throttle = heliEnt:GetThrottle()
         -- vehicleseat.GetEntraceAnimFraction()
 
         cam.Start2D()
+        imgui.Context2D(ctx)
+        
+        imgui.ContextEnd()
+
             local wps = vehicleseat.GetWeapons()
             local numWps = #wps
             local activeWpnID = vehicleseat.GetSelectedWeaponIndex()
@@ -39,6 +43,7 @@ if CLIENT then
             local wpnBoxPadding = 4
 
             local wpnBoxCaptionHeight = 16
+            local wpnBoxOutlineSize = 1
 
             local wpnBoxesWidth = numWps * wpnBoxSize + (numWps - 1) * wpnBoxPadding
             local wpnBoxesHeight = wpnBoxSize
@@ -53,20 +58,56 @@ if CLIENT then
             local curY = wpnBoxesY
 
             for i = 1, numWps do
-                surface.SetDrawColor(32, 32, 32)
+                surface.SetDrawColor(32, 32, 32, 225)
                 surface.DrawRect(curX, curY, wpnBoxSize, wpnBoxSize)
 
                 local wpn = wps[i]
                 local wpnName = wpn:WeaponData("printName")
+                local isReloading = wpn:GetIsReloading()
+                
+                if isReloading then
+                    local fracRound = wpn:WeaponReloadFraction()
 
-                surface.SetDrawColor(48, 48, 48, 100)
-                surface.DrawRect(curX, curY + wpnBoxSize - wpnBoxCaptionHeight, wpnBoxSize, wpnBoxCaptionHeight)
+                    surface.SetDrawColor(140, 140, 140, 80)
+                    surface.DrawRect(curX, curY + wpnBoxSize - wpnBoxSize * fracRound, wpnBoxSize, 500)
+                end
+
+                if i == activeWpnID then
+                    surface.SetDrawColor(255, 255, 255)
+                else
+                    surface.SetDrawColor(128, 128, 128)
+                end
+
+                surface.DrawOutlinedRect(curX, curY, wpnBoxSize, wpnBoxSize)
+
+                local usesAmmo = wpn:WeaponUsesAmmo()
+                local usesClips = wpn:WeaponUsesClips()
+
+                if usesAmmo then
+                    local ammoText = ""
+
+                    if usesClips then
+                        ammoText = ammoText .. wpn:GetClip() .. " / "
+                    end
+
+                    ammoText = ammoText .. wpn:GetAmmo()
+
+                    surface.SetFont("DermaDefault")
+                    local tw, th = surface.GetTextSize(ammoText)
+    
+                    surface.SetTextColor(255, 255, 255)
+                    surface.SetTextPos(curX + wpnBoxSize / 2 - tw / 2, curY + wpnBoxSize / 2 - th / 2)
+                    surface.DrawText(ammoText)
+                end
+                
+                surface.SetDrawColor(32, 32, 32, 175)
+                surface.DrawRect(curX + wpnBoxOutlineSize, curY + wpnBoxOutlineSize + wpnBoxSize - wpnBoxCaptionHeight, wpnBoxSize - wpnBoxOutlineSize * 2, wpnBoxCaptionHeight - wpnBoxOutlineSize * 2)
 
                 surface.SetFont("DermaDefault")
                 local tw, th = surface.GetTextSize(wpnName)
 
                 surface.SetTextColor(255, 255, 255)
-                surface.SetTextPos(curX + wpnBoxSize / 2 - tw / 2, curY + wpnBoxSize - wpnBoxCaptionHeight / 2 - th / 2)
+                surface.SetTextPos(curX + wpnBoxOutlineSize + wpnBoxSize / 2 - tw / 2, curY + wpnBoxOutlineSize + wpnBoxSize - wpnBoxCaptionHeight / 2 - th / 2)
                 surface.DrawText(wpnName)
 
                 curX = curX + wpnBoxSize + ((i != numWps) and wpnBoxPadding or 0)
@@ -181,22 +222,23 @@ local MissileLauncher =
 {
     printName = "Missile Launcher",
 
-    leftLauncher = 
+    origins =
     {
-        pos = Vector(21, 64, -71),
-        ang = Angle(0, 0, 0)
-    },
-
-    rightLauncher = 
-    {
-        pos = Vector(21, -64, -71),
-        ang = Angle(0, 0, 0)
+        {
+            pos = Vector(21, 64, -71),
+            ang = Angle(0, 0, 0)
+        },
+        {
+            pos = Vector(21, -64, -71),
+            ang = Angle(0, 0, 0)
+        }
     },
 
     missileName = "stinger",
 
-    maxAmmo = 8,
-    defaultAmmo = 8,
+    maxAmmo = 16,
+    defaultAmmo = 16,
+    clipSize = 2,
 
     primaryFireRate = 0.5,
     secondaryFireRate = 0.1,
@@ -205,49 +247,42 @@ local MissileLauncher =
 }
 
 if SERVER then
-    function MissileLauncher:ReloadRockets()
-        local leftLauncherData = self:WeaponData("leftLauncher")
-        local rightLauncherData = self:WeaponData("rightLauncher")
-
-        self.LeftMissile = missilesystem.SpawnMissile(
-            self, 
-            leftLauncherData["pos"], 
-            leftLauncherData["ang"], 
-            self:WeaponData("missileName")
-        )
+    function MissileLauncher:SpawnRockets()
+        local clip = self:GetClip()
+        local origins = self:WeaponData("origins")
+        local missileName = self:WeaponData("missileName")
         
-        self.RightMissile = missilesystem.SpawnMissile(
-            self, 
-            rightLauncherData["pos"], 
-            rightLauncherData["ang"], 
-            self:WeaponData("missileName")
-        )
+        for i = 1, clip do
+            local origin = origins[i]
 
-        self.LeftLaunched = false
-        self.RightLaunched = false
+            self.Missiles[i] = missilesystem.SpawnMissile(
+                self, 
+                origin["pos"], 
+                origin["ang"], 
+                missileName
+            )
+        end
     end
 
     function MissileLauncher:Initialize()
-        self:WeaponCall("ReloadRockets")
+        self.Missiles = {}
+        self:WeaponReload()
     end
 
     function MissileLauncher:Reloaded()
-        self:WeaponCall("ReloadRockets")
+        self:WeaponClipReload()
+        self:WeaponCall("SpawnRockets")
     end
     
     function MissileLauncher:PrimaryFire()
-        if not self.LeftLaunched then
-            print("left launch")
-            missilesystem.LaunchMissile(self.LeftMissile)
-            self.LeftLaunched = true
-        elseif not self.RightLaunched then
-            print("right launch")
-            missilesystem.LaunchMissile(self.RightMissile)
-            self.RightLaunched = true
-        end
+        local clip = self:GetClip()
 
-        if self.LeftLaunched and self.RightLaunched then
-            vehicleweapon.DoAction(self, VEHICLEWEAPON_ACTION_RELOAD)
+        missilesystem.LaunchMissile(self.Missiles[clip])
+        self.Missiles[clip] = nil
+        self:WeaponTakeAmmo(1)
+
+        if self:WeaponNeedsReload() then
+            self:WeaponReload()
         end
     end
 
@@ -333,7 +368,7 @@ local Autocannon =
     muzzlePos = Vector(203, 4, -83),
 
     maxAmmo = 2000,
-    defaultAmmo = 2000,
+    defaultAmmo = 100,
 
     primaryFireRate = 0.1,
     secondaryFireRate = 0.1,
@@ -357,6 +392,7 @@ if SERVER then
 
         local proj = projectilesystem.CreateProjectile(self, muzzlePos, projectileVelocity, "autocannon")
         self:EmitSound("acs/vehicle_weapons/autocannon/fire" .. math.random(1, 4) .. ".wav")
+        self:WeaponTakeAmmo(1)
     end
 
     function Autocannon:SecondaryFire()
@@ -391,8 +427,6 @@ local StingerMissile =
 
     blastDamage = 140,
     blastDistance = 400,
-    fuseHull = Vector(10, 10, 10),
-    fuseDist = 30,
     
     guided = true,
     predicts = true,
