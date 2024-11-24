@@ -1,6 +1,6 @@
-*.json
 *.gma
 addon_icon.jpg
+addon.json
 *.vmx
 *.prt
 *.log
