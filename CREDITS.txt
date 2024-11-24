@@ -1,2 +1,4 @@
 Sound Effects:
-- Sound Ideas Series 6000 General
+- Sound Ideas Series 6000 General CD
+- ACE (https://github.com/RedDeadlyCreeper/ArmoredCombatExtended)
+- Battlefield 2
