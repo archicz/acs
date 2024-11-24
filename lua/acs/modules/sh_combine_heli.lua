@@ -225,11 +225,11 @@ local MissileLauncher =
     origins =
     {
         {
-            pos = Vector(21, 64, -71),
+            pos = Vector(21, -64, -71),
             ang = Angle(0, 0, 0)
         },
         {
-            pos = Vector(21, -64, -71),
+            pos = Vector(21, 64, -71),
             ang = Angle(0, 0, 0)
         }
     },
@@ -243,7 +243,7 @@ local MissileLauncher =
     primaryFireRate = 0.5,
     secondaryFireRate = 0.1,
 
-    reloadDelay = 1.2
+    reloadDelay = 5
 }
 
 if SERVER then
@@ -297,15 +297,12 @@ if CLIENT then
     function MissileLauncher:Think()
     end
 
-    function MissileLauncher:Reloading()
-        self:EmitSound("npc/turret_floor/deploy.wav")
+    function MissileLauncher:Reload()
+        self:EmitSound("acs/vehicle_weapons/missile_launcher/reload.wav")
     end
 
-    function MissileLauncher:Reloaded()
-        self:EmitSound("npc/dog/dog_pneumatic1.wav")
-    end
-    
     function MissileLauncher:PrimaryFire()
+        self:EmitSound("acs/vehicle_weapons/missile_launcher/fire" .. math.random(1, 3) .. ".wav")
     end
 
     function MissileLauncher:SecondaryFire()
@@ -367,20 +364,23 @@ local Autocannon =
 
     muzzlePos = Vector(203, 4, -83),
 
-    maxAmmo = 2000,
-    defaultAmmo = 100,
+    maxAmmo = 800,
+    defaultAmmo = 800,
+    clipSize = 40,
 
     primaryFireRate = 0.1,
     secondaryFireRate = 0.1,
 
-    reloadDelay = 1.2
+    reloadDelay = 3.5
 }
 
 if SERVER then
     function Autocannon:Initialize()
+        self:WeaponReload()
     end
 
     function Autocannon:Reloaded()
+        self:WeaponClipReload()
     end
     
     function Autocannon:PrimaryFire()
@@ -391,8 +391,11 @@ if SERVER then
         local projectileVelocity = projectilesystem.MakeVelocity(projectileDir, projectileSpeed, projectileSpread)
 
         local proj = projectilesystem.CreateProjectile(self, muzzlePos, projectileVelocity, "autocannon")
-        self:EmitSound("acs/vehicle_weapons/autocannon/fire" .. math.random(1, 4) .. ".wav")
         self:WeaponTakeAmmo(1)
+
+        if self:WeaponNeedsReload() then
+            self:WeaponReload()
+        end
     end
 
     function Autocannon:SecondaryFire()
@@ -412,8 +415,13 @@ if CLIENT then
 
     function Autocannon:Think()
     end
+
+    function Autocannon:Reload()
+        self:EmitSound("acs/vehicle_weapons/autocannon/reload.wav")
+    end
     
     function Autocannon:PrimaryFire()
+        self:EmitSound("acs/vehicle_weapons/autocannon/fire" .. math.random(1, 4) .. ".wav")
     end
 
     function Autocannon:SecondaryFire()

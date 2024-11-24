@@ -10,7 +10,7 @@ end
 function ENT:Think()
     if self:GetLaunched() then
         if not self.MissileSound then 
-            self.MissileSound = CreateSound(self, "Missile.Ignite")
+            self.MissileSound = CreateSound(self, "acs/missile_motors/small.wav")
             self.MissileSound:Play()
 
             local propellerFlashAttachment = self:LookupAttachment("propeller_flash")
