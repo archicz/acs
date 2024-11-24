@@ -18,6 +18,11 @@ local function ServersideScript(path)
     if SERVER then include(absPath) end
 end
 
+-- Workshop Content
+if SERVER then
+    resource.AddWorkshop("3336022523")
+end
+
 -- Libraries
 SharedScript("libs/sh_entlist.lua")
 SharedScript("libs/sh_vischeck.lua")
