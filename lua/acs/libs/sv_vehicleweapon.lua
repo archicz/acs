@@ -152,7 +152,8 @@ function vehicleweapon.ClientNetwork(_, ply)
             local wpnEnt = vehicleseat.GetSelectedWeapon(seatEnt)
             if not IsValid(wpnEnt) then return end
 
-            vehicleweapon.DoAction(wpnEnt, action)
+            // ????
+            // vehicleweapon.DoAction(wpnEnt, action)
         end
     }
 
