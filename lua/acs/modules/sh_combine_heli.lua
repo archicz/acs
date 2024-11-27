@@ -371,7 +371,8 @@ local Autocannon =
     secondaryFireRate = 0.1,
 
     reloadDelay = 3.5,
-    reloadAuto = true
+    reloadAuto = true,
+    reloadManual = true
 }
 
 if SERVER then

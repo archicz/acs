@@ -53,10 +53,14 @@ function vehicleseat.ControlWeapon(seatEnt, cmd)
     local wpnEnt = vehicleseat.GetSelectedWeapon(seatEnt)
     if not IsValid(wpnEnt) then return end
 
+    local canReload = wpnEnt:WeaponCanManualReload() and wpnEnt:WeaponCanReload() and not wpnEnt:WeaponIsClipFull()
+
     if cmd:KeyDown(IN_ATTACK) then
         vehicleweapon.DoAction(wpnEnt, VEHICLEWEAPON_ACTION_PRIMARY)
     elseif cmd:KeyDown(IN_ATTACK2) then
         vehicleweapon.DoAction(wpnEnt, VEHICLEWEAPON_ACTION_SECONDARY)
+    elseif cmd:KeyDown(IN_RELOAD) and canReload then
+        vehicleweapon.DoAction(wpnEnt, VEHICLEWEAPON_ACTION_RELOAD)
     end
 end
 

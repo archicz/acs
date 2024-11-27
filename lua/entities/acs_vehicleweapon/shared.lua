@@ -54,9 +54,21 @@ function ENT:WeaponCanReload()
     return (self:GetAmmo() > 0)
 end
 
+function ENT:WeaponCanManualReload()
+    local reloadManual = self:WeaponData("reloadManual") or false
+    return reloadManual
+end
+
 function ENT:WeaponCanAutoReload()
     local reloadAuto = self:WeaponData("reloadAuto") or false
     return reloadAuto
+end
+
+function ENT:WeaponIsClipFull()
+    local clip = self:GetClip()
+    local clipMax = self:WeaponData("clipSize")
+
+    return (clip == clipMax)
 end
 
 function ENT:WeaponReloadFraction()
