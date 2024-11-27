@@ -243,7 +243,8 @@ local MissileLauncher =
     primaryFireRate = 0.5,
     secondaryFireRate = 0.1,
 
-    reloadDelay = 5
+    reloadDelay = 5,
+    reloadAuto = true
 }
 
 if SERVER then
@@ -266,7 +267,7 @@ if SERVER then
 
     function MissileLauncher:Initialize()
         self.Missiles = {}
-        self:WeaponReload()
+        self:WeaponCall("SpawnRockets")
     end
 
     function MissileLauncher:Reloaded()
@@ -280,10 +281,6 @@ if SERVER then
         missilesystem.LaunchMissile(self.Missiles[clip])
         self.Missiles[clip] = nil
         self:WeaponTakeAmmo(1)
-
-        if self:WeaponNeedsReload() then
-            self:WeaponReload()
-        end
     end
 
     function MissileLauncher:SecondaryFire()
@@ -297,7 +294,7 @@ if CLIENT then
     function MissileLauncher:Think()
     end
 
-    function MissileLauncher:Reload()
+    function MissileLauncher:Reloaded()
         self:EmitSound("acs/vehicle_weapons/missile_launcher/reload.wav")
     end
 
@@ -350,11 +347,13 @@ end
 
 if SERVER then
     function AutocannonProjectile:OnImpactWorld(trace)
-        local effectdata = EffectData()
-        effectdata:SetOrigin(trace.HitPos)
-        effectdata:SetScale(100)
-        effectdata:SetMagnitude(800)
-        util.Effect("Explosion", effectdata)
+        dmgsystem.ExplosionBlast(self:GetLauncher():GetRealOwner(), self:GetLauncher(), trace.HitPos, 200, 40)
+
+        -- local effectdata = EffectData()
+        -- effectdata:SetOrigin(trace.HitPos)
+        -- effectdata:SetScale(100)
+        -- effectdata:SetMagnitude(800)
+        -- util.Effect("Explosion", effectdata)
     end
 end
 
@@ -371,12 +370,12 @@ local Autocannon =
     primaryFireRate = 0.1,
     secondaryFireRate = 0.1,
 
-    reloadDelay = 3.5
+    reloadDelay = 3.5,
+    reloadAuto = true
 }
 
 if SERVER then
     function Autocannon:Initialize()
-        self:WeaponReload()
     end
 
     function Autocannon:Reloaded()
@@ -392,10 +391,6 @@ if SERVER then
 
         local proj = projectilesystem.CreateProjectile(self, muzzlePos, projectileVelocity, "autocannon")
         self:WeaponTakeAmmo(1)
-
-        if self:WeaponNeedsReload() then
-            self:WeaponReload()
-        end
     end
 
     function Autocannon:SecondaryFire()
@@ -416,7 +411,7 @@ if CLIENT then
     function Autocannon:Think()
     end
 
-    function Autocannon:Reload()
+    function Autocannon:Reloaded()
         self:EmitSound("acs/vehicle_weapons/autocannon/reload.wav")
     end
     

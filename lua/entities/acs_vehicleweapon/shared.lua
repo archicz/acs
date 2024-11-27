@@ -54,6 +54,11 @@ function ENT:WeaponCanReload()
     return (self:GetAmmo() > 0)
 end
 
+function ENT:WeaponCanAutoReload()
+    local reloadAuto = self:WeaponData("reloadAuto") or false
+    return reloadAuto
+end
+
 function ENT:WeaponReloadFraction()
     local reloadTime = self:GetReloadTime()
     local reloadDelay = self:WeaponData("reloadDelay")

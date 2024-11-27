@@ -5,6 +5,11 @@ include("shared.lua")
 function ENT:Initialize()
 	self:SetMoveType(MOVETYPE_NONE)
 	self:SetSolid(SOLID_NONE)
+    
+    if self:WeaponCanReload() and self:WeaponNeedsReload() then
+        self:WeaponClipReload()
+    end
+
     self:WeaponCall("Initialize")
 end
 
@@ -111,6 +116,10 @@ function ENT:Think()
         if CurTime() >= reloadTime then
             self:SetIsReloading(false)
             vehicleweapon.DoAction(self, VEHICLEWEAPON_ACTION_RELOADED)
+        end
+    else
+        if self:WeaponCanReload() and self:WeaponNeedsReload() then
+            self:WeaponReload()
         end
     end
 
