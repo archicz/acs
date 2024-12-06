@@ -1,7 +1,9 @@
 baseregistry = {}
 baseregistry.Directory = "acs"
 
-function baseregistry.Create(baseTbl, printName, dir)
+local RegistrarList = {}
+
+function baseregistry.Create(baseTbl, printName, searchDir)
     local registrySystem = {}
     local registryEntries = {}
 
@@ -20,7 +22,7 @@ function baseregistry.Create(baseTbl, printName, dir)
             return existingTbl
         end
 
-        setmetatable(tbl, __index = tbl.Base or baseTbl)
+        setmetatable(tbl, {__index = tbl.Base or baseTbl})
         registryEntries[name] = tbl
         return tbl
     end
@@ -42,12 +44,13 @@ function baseregistry.Create(baseTbl, printName, dir)
     end
 
     function registrySystem.Reload()
-        local _, registryDirs = file.Find(baseregistry.Directory .. "/" .. , "LUA")
+        local registryDir = baseregistry.Directory .. "/" .. searchDir
+        local _, registryDirs = file.Find(registryDir .. "/*", "LUA")
 
         for i = 1, #registryDirs do
             local dir = registryDirs[i]
             
-            local sharedScript = string.format("%s/%s/shared.lua", baseregistry.Directory, dir)
+            local sharedScript = string.format("%s/%s/shared.lua", registryDir, dir)
             if file.Exists(sharedScript, "LUA") then
                 if SERVER then
                     AddCSLuaFile(sharedScript)
@@ -58,14 +61,14 @@ function baseregistry.Create(baseTbl, printName, dir)
             end
     
             if SERVER then
-                local serverScript = string.format("%s/%s/init.lua", baseregistry.Directory, dir)
+                local serverScript = string.format("%s/%s/init.lua", registryDir, dir)
                 if file.Exists(serverScript, "LUA") then
                     local tbl = include(serverScript)
                     registrySystem.Register(dir, tbl)
                 end
             end
     
-            local clientScript = string.format("%s/%s/cl_init.lua", baseregistry.Directory, dir)
+            local clientScript = string.format("%s/%s/cl_init.lua", registryDir, dir)
             if file.Exists(clientScript, "LUA") then
                 if SERVER then
                     AddCSLuaFile(clientScript)
@@ -80,6 +83,16 @@ function baseregistry.Create(baseTbl, printName, dir)
     end
 
     registrySystem.Reload()
-    
+    table.insert(RegistrarList, registrySystem)
+
     return registrySystem
 end
+
+function baseregistry.Reload()
+    for i = 1, #RegistrarList do
+        local registrySystem = RegistrarList[i]
+        registrySystem.Reload()
+    end
+end
+
+concommand.Add((CLIENT and "cl_" or "sv_") .. "registry_reload", baseregistry.Reload)
