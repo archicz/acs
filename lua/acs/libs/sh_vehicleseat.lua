@@ -1,4 +1,3 @@
-local SeatList = {}
 local BaseSeat =
 {
     mdl = "models/nova/jeep_seat.mdl",
@@ -19,7 +18,7 @@ local BaseSeat =
     freelookPitchMax = 90
 }
 
-vehicleseat = {}
+vehicleseat = baseregistry.Create(BaseSeat, "Vehicleseat", "vehicleseats")
 vehicleseat.ClassName = "acs_vehicleseat"
 vehicleseat.NetworkString = "VehicleSeat"
 vehicleseat.FreelookKey = IN_WALK
@@ -28,32 +27,3 @@ VEHICLESEAT_NET_ENTER = 0
 VEHICLESEAT_NET_EXIT = 1
 VEHICLESEAT_NET_CMD = 2
 VEHICLESEAT_NET_FREELOOK = 3
-
-function vehicleseat.GetList()
-    return SeatList
-end
-
-function vehicleseat.Get(name)
-    return SeatList[name] or nil
-end
-
-function vehicleseat.Call(name, fn, ...)
-    local seatTbl = vehicleseat.Get(name)
-    if not seatTbl then return end
-
-    local tblFn = seatTbl[fn]
-    if not tblFn then return end
-
-    local succ, data = pcall(tblFn, ...)
-    if not succ then
-        print(string.format("Vehicle Seat [%s:%s] Error: %s", name, fn, data))
-        return 
-    end
-
-    return data
-end
-
-function vehicleseat.Register(name, seatTbl)
-    setmetatable(seatTbl, {__index = BaseSeat})
-    SeatList[name] = seatTbl
-end

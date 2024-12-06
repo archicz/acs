@@ -1,4 +1,3 @@
-local MissileList = {}
 local BaseMissile =
 {
     speedDuration = 2,
@@ -17,18 +16,5 @@ local BaseMissile =
     mdl = "models/weapons/w_missile_closed.mdl"
 }
 
-missilesystem = {}
+missilesystem = baseregistry.Create(BaseMissile, "Missile", "missiles")
 missilesystem.ClassName = "acs_missile"
-
-function missilesystem.GetList()
-    return MissileList
-end
-
-function missilesystem.Get(name)
-    return MissileList[name] or nil
-end
-
-function missilesystem.Register(name, missileTbl)
-    setmetatable(missileTbl, {__index = BaseMissile})
-    MissileList[name] = missileTbl
-end

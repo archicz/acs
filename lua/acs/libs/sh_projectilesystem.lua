@@ -1,11 +1,10 @@
-local ProjectileList = {}
 local ActiveProjectiles = {}
 local BaseProjectile =
 {
     dragCoef = 0.04
 }
 
-projectilesystem = {}
+projectilesystem = baseregistry.Create(BaseProjectile, "Projectile", "projectiles")
 projectilesystem.NetworkString = "ProjectileSystem"
 
 PROJECTILESYSTEM_NET_CREATE = 0
@@ -103,35 +102,6 @@ end
 
 function projectilesystem.GetProjectileMeta()
     return Projectile
-end
-
-function projectilesystem.GetList()
-    return ProjectileList
-end
-
-function projectilesystem.Get(name)
-    return ProjectileList[name] or nil
-end
-
-function projectilesystem.Call(name, fn, ...)
-    local projTbl = projectilesystem.Get(name)
-    if not projTbl then return end
-
-    local tblFn = projTbl[fn]
-    if not tblFn then return end
-
-    local succ, data = pcall(tblFn, ...)
-    if not succ then
-        print(string.format("Projectile [%s:%s] Error: %s", name, fn, data))
-        return 
-    end
-
-    return data
-end
-
-function projectilesystem.Register(name, projTbl)
-    setmetatable(projTbl, {__index = BaseProjectile})
-    ProjectileList[name] = projTbl
 end
 
 function projectilesystem.CreateProjectile(launcher, localPos, vel, projName)
