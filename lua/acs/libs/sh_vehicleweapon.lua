@@ -3,7 +3,7 @@ local BaseWeapon =
     printName = "Vehicle Weapon"
 }
 
-vehicleweapon = baseregistry.Create(BaseWeapon, "Vehicleweapon", "vehicleweapos")
+vehicleweapon = baseregistry.Create(BaseWeapon, "Vehicleweapon", "vehicleweapons")
 vehicleweapon.ClassName = "acs_vehicleweapon"
 vehicleweapon.NetworkString = "VehicleWeapon"
 
