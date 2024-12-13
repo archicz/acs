@@ -26,8 +26,7 @@ function Heli:Think()
     local rotorAng = self.RotorAng
     local newRotorAng = rotorAng + rotorThrottle + rotorCollective
 
-    local enginePitch = math.floor(throttle + collective)
-
+    local enginePitch = math.floor(throttle * 100 + collective * 10)
     if enginePitch > 0 then
         self.EngineSound:Play()
         self.EngineSound:ChangePitch(enginePitch, 0)
