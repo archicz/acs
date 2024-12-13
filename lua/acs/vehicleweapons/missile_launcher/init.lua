@@ -27,15 +27,12 @@ function Weapon:Reloaded()
     self:WeaponCall("SpawnRockets")
 end
 
-function Weapon:PrimaryFire()
+function Weapon:Fire()
     local clip = self:GetClip()
 
     missilesystem.LaunchMissile(self.Missiles[clip])
     self.Missiles[clip] = nil
     self:WeaponTakeAmmo(1)
-end
-
-function Weapon:SecondaryFire()
 end
 
 return Weapon

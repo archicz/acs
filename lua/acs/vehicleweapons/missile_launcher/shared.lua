@@ -20,8 +20,7 @@ local Weapon =
     defaultAmmo = 16,
     clipSize = 2,
 
-    primaryFireRate = 0.5,
-    secondaryFireRate = 0.1,
+    fireRate = 0.5,
 
     reloadDelay = 5,
     reloadAuto = true
