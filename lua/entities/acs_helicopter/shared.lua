@@ -24,10 +24,8 @@ function ENT:HeliActive()
 end
 
 function ENT:SetupDataTables()
-    self:NetworkVar("String", 0, "HeliName")
-
-    self:NetworkVar("Float", 0, "Collective")
-    self:NetworkVar("Float", 1, "Throttle")
-
-    self:NetworkVar("Angle", 0, "Cyclic")
+    self:NetworkVar("String", "HeliName")
+    self:NetworkVar("Float", "Collective")
+    self:NetworkVar("Float", "Throttle")
+    self:NetworkVar("Angle", "Cyclic")
 end

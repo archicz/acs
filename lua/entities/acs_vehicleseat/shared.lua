@@ -22,9 +22,7 @@ function ENT:SeatData(key)
 end
 
 function ENT:SetupDataTables()
-    self:NetworkVar("String", 0, "SeatName")
-
-    self:NetworkVar("Bool", 0, "Active")
-
-    self:NetworkVar("Entity", 0, "Controller")
+    self:NetworkVar("String", "SeatName")
+    self:NetworkVar("Bool", "Active")
+    self:NetworkVar("Entity", "Controller")
 end

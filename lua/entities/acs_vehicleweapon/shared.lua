@@ -81,14 +81,13 @@ function ENT:WeaponReloadFraction()
 end
 
 function ENT:SetupDataTables()
-    self:NetworkVar("String", 0, "WeaponName")
+    self:NetworkVar("String", "WeaponName")
+    self:NetworkVar("Float", "NextPrimaryFire")
+    self:NetworkVar("Float", "NextSecondaryFire")
+    self:NetworkVar("Float", "ReloadTime")
+    self:NetworkVar("Int", "Ammo")
+    self:NetworkVar("Int", "Clip")
+    self:NetworkVar("Bool", "IsReloading")
 
-    self:NetworkVar("Float", 0, "NextPrimaryFire")
-    self:NetworkVar("Float", 1, "NextSecondaryFire")
-    self:NetworkVar("Float", 2, "ReloadTime")
-
-    self:NetworkVar("Int", 0, "Ammo")
-    self:NetworkVar("Int", 1, "Clip")
-
-    self:NetworkVar("Bool", 0, "IsReloading")
+    self:WeaponCall("SetupDataTables")
 end

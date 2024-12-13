@@ -15,10 +15,7 @@ function ENT:MissileData(key)
 end
 
 function ENT:SetupDataTables()
-    self:NetworkVar("Bool", 0, "Launched")
-    
-    self:NetworkVar("Entity", 0, "Launcher")
-    self:NetworkVar("Entity", 1, "GuidanceTarget")
-    
-    self:NetworkVar("String", 0, "MissileName")
+    self:NetworkVar("Bool", "Launched")
+    self:NetworkVar("Entity", "Launcher")
+    self:NetworkVar("String", "MissileName")
 end
