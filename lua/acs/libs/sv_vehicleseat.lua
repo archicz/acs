@@ -18,10 +18,10 @@ function vehicleseat.CreateSeat(baseEnt, pos, ang, seatName)
     return seatEnt
 end
 
-function vehicleseat.SetupVehicle(ent, seatsCfg)
+function vehicleseat.SetupVehicle(ent)
     ent.VehicleSeats = {}
 
-    function ent:VehicleCreateSeats()
+    function ent:VehicleCreateSeats(seatsCfg)
         for i = 1, #seatsCfg do
             local seatInfo = seatsCfg[i]
     
