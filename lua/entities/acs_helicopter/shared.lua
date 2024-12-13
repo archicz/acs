@@ -1,4 +1,4 @@
-DEFINE_BASECLASS("acs_vehiclebase")
+DEFINE_BASECLASS("base_anim")
 
 ENT.PrintName = "Helicopter"
 ENT.Author = "archi"

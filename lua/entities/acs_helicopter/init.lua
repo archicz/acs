@@ -18,19 +18,7 @@ end
 -- DEBUG ONLY, REMOVE THIS
 
 function ENT:Initialize()
-	self:SetModel(self:HeliData("mdl"))
-	self:PhysicsInit(SOLID_VPHYSICS)
-	self:SetMoveType(MOVETYPE_VPHYSICS)
-	self:SetSolid(SOLID_VPHYSICS)
-    self:SetUseType(SIMPLE_USE)
-
-	local phys = self:GetPhysicsObject()
-	if phys:IsValid() then
-		phys:Wake()
-	end
-    
-    self.VehicleSeatsConfig = self:HeliData("seats")
-    self:VehicleCreateSeats()
+    vehicleseat.SetupVehicle(ENT, self:HeliData("seats"))
     self:HeliCall("Initialize")
 end
 
@@ -155,7 +143,7 @@ function ENT:SimulateHeliCyclic(phys)
 end
 
 function ENT:Use(activator, caller)
-    self:VehicleEnterSeat(activator)
+    self:HeliCall("Use", activator, caller)
 end
 
 function ENT:PhysicsUpdate(phys)
@@ -167,9 +155,11 @@ function ENT:Think()
     self:HeliUpdateControls()
     self:HeliUpdateRotorWash()
 	self:NextThink(CurTime())
+
 	return true
 end
 
 function ENT:OnRemove()
     self:VehicleRemoveSeats()
+    self:HeliCall("OnRemove")
 end
