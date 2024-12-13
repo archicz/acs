@@ -7,6 +7,10 @@ function Heli:Initialize()
     self.RotorHullBone = self:LookupBone("Chopper.Blade_Hull")
     self.RotorAng = 0
     self.TailAng = 0
+
+    if not IsValid(self.EngineSound) then
+        self.EngineSound = CreateSound(self, "NPC_AttackHelicopter.Rotors")
+    end
 end
 
 function Heli:Think()
@@ -22,15 +26,33 @@ function Heli:Think()
     local rotorAng = self.RotorAng
     local newRotorAng = rotorAng + rotorThrottle + rotorCollective
 
+    local enginePitch = math.floor(throttle + collective)
+
+    if enginePitch > 0 then
+        self.EngineSound:Play()
+        self.EngineSound:ChangePitch(enginePitch, 0)
+    else
+        self.EngineSound:Stop()
+    end
+
     self.RotorAng = newRotorAng % 360
     self.TailAng = cyclic.y * 45
 end
 
-function Heli:Draw()    
+function Heli:Draw()
+    self:DrawModel()
+
     self:ManipulateBoneAngles(self.RotorBone, Angle(self.RotorAng, 0, 0), true)
     self:ManipulateBoneAngles(self.RotorTailBone, Angle(0, 0, self.RotorAng), true)
     self:ManipulateBoneAngles(self.RotorHullBone, Angle(0, 0, self.RotorAng), true)
     self:ManipulateBoneAngles(self.TailBone, Angle(0, self.TailAng, 0), true)
+end
+
+function Heli:OnRemove()
+    if self.EngineSound then
+        self.EngineSound:Stop()
+        self.EngineSound = nil
+    end
 end
 
 return Heli

@@ -1,6 +1,5 @@
 local Heli =
 {
-    mdl = "models/Combine_Helicopter.mdl",
     seats =
     {
         {
@@ -15,7 +14,11 @@ local Heli =
         }
     },
 
-    rotorSound = "NPC_AttackHelicopter.Rotors",
+    damage =
+    {
+        maxHealth = 2000,
+        defaultHealth = 2000
+    },
     
     throttleStrength = 0.25,
 
