@@ -47,15 +47,6 @@ function ENT:MissileLaunch()
     self.LaunchTime = CurTime()
 end
 
-function ENT:MissileGuidance()
-    local guided = self:MissileData("guided")
-    local guidanceTarget = self:GetGuidanceTarget()
-
-    if guided and not IsValid(guidanceTarget) then
-        self:SetGuidanceTarget(nil)
-    end
-end
-
 function ENT:MissilePropellant()
     local speedDuration = self:MissileData("speedDuration")
     local speedMax = self:MissileData("speedMax")
@@ -93,35 +84,33 @@ function ENT:SimulateForwardThrust(phys)
 end
 
 function ENT:SimulateSteering(phys)
-    local guided = self:MissileData("guided")
-    local guidanceTarget = self:GetGuidanceTarget()
+    -- if guided then
+    --     local startPos = phys:GetPos()
+    --     local targetPos = guidanceTarget:GetPos()
+    --     local canPredict = self:MissileData("predicts")
+
+    --     if canPredict then
+    --         local targetPhys = guidanceTarget:GetPhysicsObject()
+
+    --         if IsValid(targetPhys) then
+    --             local dist = self:GetPos():Distance(guidanceTarget:GetPos())
+    --             local missileVel = phys:GetVelocity()
+    --             local targetVel = targetPhys:GetVelocity()
+    --             local tickInterval = engine.TickInterval()
+
+    --             local predictTime = dist / missileVel:Length()
+    --             local predictTicks = math.floor(predictTime / tickInterval)
+
+    --             targetPos = targetPos + (targetVel * tickInterval * predictTicks)
+    --         end
+    --     end
+
+    --     desiredDir = (targetPos - startPos):GetNormalized()
+    -- end
+
     local desiredDir = self:GetForward()
-
-    if guided and IsValid(guidanceTarget) then
-        local startPos = phys:GetPos()
-        local targetPos = guidanceTarget:GetPos()
-        local canPredict = self:MissileData("predicts")
-
-        if canPredict then
-            local targetPhys = guidanceTarget:GetPhysicsObject()
-
-            if IsValid(targetPhys) then
-                local dist = self:GetPos():Distance(guidanceTarget:GetPos())
-                local missileVel = phys:GetVelocity()
-                local targetVel = targetPhys:GetVelocity()
-                local tickInterval = engine.TickInterval()
-
-                local predictTime = dist / missileVel:Length()
-                local predictTicks = math.floor(predictTime / tickInterval)
-
-                targetPos = targetPos + (targetVel * tickInterval * predictTicks)
-            end
-        end
-
-        desiredDir = (targetPos - startPos):GetNormalized()
-    end
-
     local desiredAngle = desiredDir:Angle()
+
     local angVel = phys:GetAngleVelocity()
     local angVelReal = Angle(angVel.y, angVel.z, angVel.x)
     local angForce = self:WorldToLocalAngles(desiredAngle)
@@ -148,9 +137,9 @@ function ENT:PhysicsUpdate(phys)
 end
 
 function ENT:Think()
-    self:MissileGuidance()
     self:MissilePropellant()
     self:NextThink(CurTime())
+    
     return true
 end
 
