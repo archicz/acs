@@ -12,12 +12,8 @@ function ENT:WeaponReloaded()
     self:WeaponCall("Reloaded")
 end
 
-function ENT:WeaponPrimaryFire()
-    self:WeaponCall("PrimaryFire")
-end
-
-function ENT:WeaponSecondaryFire()
-    self:WeaponCall("SecondaryFire")
+function ENT:WeaponFire()
+    self:WeaponCall("Fire")
 end
 
 function ENT:Think()

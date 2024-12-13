@@ -82,26 +82,14 @@ function ENT:WeaponReloaded()
     return true
 end
 
-function ENT:WeaponPrimaryFire()
-    local nextPrimary = self:GetNextPrimaryFire()
-    local canPrimary = self:WeaponCanPrimary()
+function ENT:WeaponFire()
+    local nextFire = self:GetNextFire()
+    local canFire = self:WeaponCanFire()
 
-    if CurTime() >= nextPrimary and canPrimary then
-        self:WeaponCall("PrimaryFire")
-        self:SetNextPrimaryFire(CurTime() + self:WeaponData("primaryFireRate"))
+    if CurTime() >= nextFire and canFire then
+        self:WeaponCall("Fire")
+        self:SetNextFire(CurTime() + self:WeaponData("fireRate"))
         
-        return true
-    end
-
-    return false
-end
-
-function ENT:WeaponSecondaryFire()
-    local nextSecondary = self:GetNextSecondaryFire()
-    if CurTime() >= nextSecondary then
-        self:WeaponCall("SecondaryFire")
-
-        self:SetNextSecondaryFire(CurTime() + self:WeaponData("secondaryFireRate"))
         return true
     end
 

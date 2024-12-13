@@ -36,7 +36,7 @@ function ENT:WeaponUsesClips()
     return (clipSize > 0)
 end
 
-function ENT:WeaponCanPrimary()
+function ENT:WeaponCanFire()
     if self:WeaponUsesClips() then
         return (self:GetClip() > 0)
     else
@@ -82,8 +82,7 @@ end
 
 function ENT:SetupDataTables()
     self:NetworkVar("String", "WeaponName")
-    self:NetworkVar("Float", "NextPrimaryFire")
-    self:NetworkVar("Float", "NextSecondaryFire")
+    self:NetworkVar("Float", "NextFire")
     self:NetworkVar("Float", "ReloadTime")
     self:NetworkVar("Int", "Ammo")
     self:NetworkVar("Int", "Clip")

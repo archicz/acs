@@ -154,12 +154,8 @@ function vehicleweapon.DoAction(wpnEnt, action)
 
     local actionHandlers =
     {
-        [VEHICLEWEAPON_ACTION_PRIMARY] = function()
-            wpnEnt:WeaponPrimaryFire()
-        end,
-
-        [VEHICLEWEAPON_ACTION_SECONDARY] = function()
-            wpnEnt:WeaponSecondaryFire()
+        [VEHICLEWEAPON_ACTION_FIRE] = function()
+            wpnEnt:WeaponFire()
         end,
 
         [VEHICLEWEAPON_ACTION_RELOADING] = function()
