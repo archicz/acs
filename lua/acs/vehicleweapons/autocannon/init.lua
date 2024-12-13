@@ -10,7 +10,7 @@ end
 function Weapon:PrimaryFire()
     local muzzlePos = self:WeaponData("muzzlePos")
     local projectileDir = self:GetForward()
-    local projectileSpeed = 10000
+    local projectileSpeed = 32000
     local projectileSpread = Angle(0.25, 0.25, 0)
     local projectileVelocity = projectilesystem.MakeVelocity(projectileDir, projectileSpeed, projectileSpread)
 
