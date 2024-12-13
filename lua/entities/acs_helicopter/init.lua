@@ -18,7 +18,11 @@ end
 -- DEBUG ONLY, REMOVE THIS
 
 function ENT:Initialize()
-    vehicleseat.SetupVehicle(ENT, self:HeliData("seats"))
+    self:SetUseType(SIMPLE_USE)
+
+    vehicleseat.SetupVehicle(self)
+    self:VehicleCreateSeats(self:HeliData("seats"))
+    
     self:HeliCall("Initialize")
 end
 
