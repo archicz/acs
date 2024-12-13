@@ -18,6 +18,60 @@ function vehicleseat.CreateSeat(baseEnt, pos, ang, seatName)
     return seatEnt
 end
 
+function vehicleseat.SetupVehicle(ent, seatsCfg)
+    ent.VehicleSeats = {}
+
+    function ent:VehicleCreateSeats()
+        for i = 1, #seatsCfg do
+            local seatInfo = seatsCfg[i]
+    
+            local seat = vehicleseat.CreateSeat(
+                self, 
+                self:LocalToWorld(seatInfo["pos"]), 
+                self:LocalToWorldAngles(seatInfo["ang"]), 
+                seatInfo["name"]
+            )
+    
+            local seatWps = seatInfo.weapons
+            if seatWps then
+                for j = 1, #seatWps do
+                    local wpnName = seatWps[j]
+                    local wpn = vehicleweapon.CreateWeapon(self, seat, wpnName)
+                end
+            end
+            
+            self.VehicleSeats[i] = seat
+        end
+    end
+    
+    function ent:VehicleRemoveSeats()
+        for i = 1, #self.VehicleSeats do
+            local seat = self.VehicleSeats[i]
+            if IsValid(seat) then
+                SafeRemoveEntity(seat)
+            end
+        end
+    end
+    
+    function ent:VehicleEnterSeat(ply, seatId)
+        if not seatId then
+            for i = 1, #self.VehicleSeats do
+                local seat = self.VehicleSeats[i]
+        
+                if IsValid(seat) and not seat:SeatOccupied() then
+                    seatId = i
+                    break
+                end
+            end
+        end
+    
+        local seatEnt = self.VehicleSeats[seatId]
+        if not IsValid(seatEnt) then return end
+    
+        seatEnt:SeatEnter(ply)
+    end
+end
+
 function vehicleseat.IsFreelooking(seatEnt)
     return seatEnt.FreelookEnabled
 end
