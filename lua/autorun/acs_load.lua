@@ -45,19 +45,25 @@ ClientsideScript("libs/cl_dpiaware.lua")
 ClientsideScript("libs/cl_imgui.lua")
 ClientsideScript("libs/cl_interactivescene.lua")
 
-ServersideScript("libs/sv_damagesystem.lua")
+SharedScript("libs/sh_pacmodel.lua")
+ClientsideScript("libs/cl_pacmodel.lua")
+ServersideScript("libs/sv_pacmodel.lua")
 
 SharedScript("libs/sh_vehicleseat.lua")
 ClientsideScript("libs/cl_vehicleseat.lua")
 ServersideScript("libs/sv_vehicleseat.lua")
 
-SharedScript("libs/sh_projectilesystem.lua")
-ClientsideScript("libs/cl_projectilesystem.lua")
-ServersideScript("libs/sv_projectilesystem.lua")
-
 SharedScript("libs/sh_vehicleweapon.lua")
 ClientsideScript("libs/cl_vehicleweapon.lua")
 ServersideScript("libs/sv_vehicleweapon.lua")
+
+SharedScript("libs/sh_damagesystem.lua")
+ClientsideScript("libs/cl_damagesystem.lua")
+ServersideScript("libs/sv_damagesystem.lua")
+
+SharedScript("libs/sh_projectilesystem.lua")
+ClientsideScript("libs/cl_projectilesystem.lua")
+ServersideScript("libs/sv_projectilesystem.lua")
 
 SharedScript("libs/sh_missilesystem.lua")
 ClientsideScript("libs/cl_missilesystem.lua")

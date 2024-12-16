@@ -14,6 +14,17 @@ function Heli:Initialize()
     self:SetSubMaterial(1, "models/effects/vol_light001")
 end
 
+function Heli:OnDamagePhysicsCollide(colData)
+    local effectdata = EffectData()
+    effectdata:SetOrigin(colData["HitPos"])
+    effectdata:SetScale(4)
+    effectdata:SetMagnitude(25)
+    util.Effect("acs_metalscrape", effectdata)
+end
+
+function Heli:OnDamagePhysicsDamage(colData)
+end
+
 function Heli:Use(activator, caller)
     self:VehicleEnterSeat(activator)
 end

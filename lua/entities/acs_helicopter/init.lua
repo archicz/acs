@@ -22,6 +22,9 @@ function ENT:Initialize()
 
     vehicleseat.SetupVehicle(self)
     self:VehicleCreateSeats(self:HeliData("seats"))
+
+    dmgsystem.SetupEntity(self)
+    self:DamageInit(self:HeliData("dmg"))
     
     self:HeliCall("Initialize")
 end
@@ -144,6 +147,14 @@ function ENT:SimulateHeliCyclic(phys)
     local angDir = (angForce * 90 - angVelReal)
 
     phys:ApplyAngForce(Angle(angDir.p * inertia.y, angDir.y * inertia.z, angDir.r * inertia.x))
+end
+
+function ENT:OnDamagePhysicsCollide(colData)
+    self:HeliCall("OnDamagePhysicsCollide", colData)
+end
+
+function ENT:OnDamagePhysicsDamage(colData)
+    self:HeliCall("OnDamagePhysicsDamage", colData)
 end
 
 function ENT:Use(activator, caller)

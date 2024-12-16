@@ -14,10 +14,24 @@ local Heli =
         }
     },
 
-    damage =
+    dmg =
     {
         maxHealth = 2000,
-        defaultHealth = 2000
+        defaultHealth = 2000,
+
+        types =
+        {
+            [DMGSYS_TYPE_EXPLOSIVE] = 1,
+            [DMGSYS_TYPE_AP] = 0.5
+        },
+
+        physics = 
+        {
+            collideThreshold = 75,
+            damageThreshold = 500,
+            damageCoeff = 0.05,
+            damageMax = 200
+        }
     },
     
     throttleStrength = 0.25,
