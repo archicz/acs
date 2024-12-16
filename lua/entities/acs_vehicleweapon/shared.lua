@@ -37,6 +37,8 @@ function ENT:WeaponUsesClips()
 end
 
 function ENT:WeaponCanFire()
+    if self:GetIsReloading() then return false end
+
     if self:WeaponUsesClips() then
         return (self:GetClip() > 0)
     else
