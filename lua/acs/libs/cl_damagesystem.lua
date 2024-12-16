@@ -1,0 +1,1 @@
+if not dmgsystem then return end

@@ -31,12 +31,14 @@ function vehicleseat.SetupVehicle(ent)
                 self:LocalToWorldAngles(seatInfo["ang"]), 
                 seatInfo["name"]
             )
-    
-            local seatWps = seatInfo.weapons
-            if seatWps then
-                for j = 1, #seatWps do
-                    local wpnName = seatWps[j]
-                    local wpn = vehicleweapon.CreateWeapon(self, seat, wpnName)
+            
+            if vehicleweapon then
+                local seatWps = seatInfo.weapons
+                if seatWps then
+                    for j = 1, #seatWps do
+                        local wpnName = seatWps[j]
+                        local wpn = vehicleweapon.CreateWeapon(self, seat, wpnName)
+                    end
                 end
             end
             
