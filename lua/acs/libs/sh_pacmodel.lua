@@ -1,5 +1,7 @@
 pacmodel = {}
 
+PACMODEL_VISUAL_DISTANCE = 8192 -- TODO: Make a cvar/setting?
+
 -- OnPACModelParse (string groupName, tbl groupTbl)
 -- OnPACModelCreate (string groupName, tbl parsedTbl)
 
@@ -100,7 +102,7 @@ function pacmodel.CreateVisuals(ent, name, outfit)
 
     pac.SetupENT(ent)
     ent:AttachPACPart(outfit)
-    ent:SetPACDrawDistance(4096) -- TODO: Make a cvar/setting
+    ent:SetPACDrawDistance(PACMODEL_VISUAL_DISTANCE)
 
     function ent:PACModelGetOutfit()
         return outfit
