@@ -22,4 +22,4 @@ local function CreateVisual(ent, name, outfit)
 end
 
 hook.Add("OnPACModelParse", "PACModelParseVisual", ParseVisual)
-hook.Add("OnPACModelCreate", "PACModelCreateVisuals", CreateVisuals)
+hook.Add("OnPACModelCreate", "PACModelCreateVisuals", CreateVisual)
