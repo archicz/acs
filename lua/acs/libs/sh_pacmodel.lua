@@ -100,10 +100,14 @@ function pacmodel.CreateVisuals(ent, name, outfit)
 
     pac.SetupENT(ent)
     ent:AttachPACPart(outfit)
-    ent:SetPACDrawDistance(2048) -- TODO: Make a cvar/setting
+    ent:SetPACDrawDistance(4096) -- TODO: Make a cvar/setting
 
     function ent:PACModelGetOutfit()
         return outfit
+    end
+
+    function ent:PACModelRemoveOutfit()
+        ent:RemovePACPart(outfit)
     end
 end
 

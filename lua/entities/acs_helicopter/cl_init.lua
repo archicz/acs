@@ -19,5 +19,6 @@ function ENT:Draw()
 end
 
 function ENT:OnRemove()
+    self:PACModelRemoveOutfit()
     self:HeliCall("OnRemove")
 end

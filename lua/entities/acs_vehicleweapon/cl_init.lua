@@ -28,5 +28,6 @@ function ENT:Draw()
 end
 
 function ENT:OnRemove()
+    self:PACModelRemoveOutfit()
     self:WeaponCall("OnRemove")
 end
