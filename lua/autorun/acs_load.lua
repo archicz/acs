@@ -73,6 +73,8 @@ SharedScript("libs/sh_helisystem.lua")
 ClientsideScript("libs/cl_helisystem.lua")
 ServersideScript("libs/sv_helisystem.lua")
 
+baseregistry.Reload()
+
 -- Modules
 -- SharedScript("modules/sh_combine_heli.lua")
 -- ClientsideScript("modules/cl_menu.lua")

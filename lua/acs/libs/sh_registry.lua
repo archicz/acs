@@ -44,6 +44,8 @@ function baseregistry.Create(baseTbl, printName, searchDir)
     end
 
     function registrySystem.Reload()
+        registryEntries = {}
+        
         local registryDir = baseregistry.Directory .. "/" .. searchDir
         local _, registryDirs = file.Find(registryDir .. "/*", "LUA")
 
@@ -82,7 +84,7 @@ function baseregistry.Create(baseTbl, printName, searchDir)
         end
     end
 
-    registrySystem.Reload()
+    -- registrySystem.Reload()
     table.insert(RegistrarList, registrySystem)
 
     return registrySystem
