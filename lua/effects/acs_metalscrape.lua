@@ -17,10 +17,8 @@ sound.Add(
 
 function EFFECT:Init(data)
     self.Pos = data:GetOrigin()
-    self.Ang = data:GetAngles()
     self.Magnitude = data:GetMagnitude()
     self.Scale = data:GetScale()
-    
     self.Emitter = ParticleEmitter(self.Pos)
 
     EmitSound("acs.MetalScrape", self.Pos)

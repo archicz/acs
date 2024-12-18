@@ -1,18 +1,6 @@
 local Heli =
 {
-    seats =
-    {
-        {
-            name = "combine_heli_pilot",
-            pos = Vector(142, 0, -50),
-            ang = Angle(0, -90, 0),
-            weapons =
-            {
-                "autocannon",
-                "missile_launcher"
-            }
-        }
-    },
+    pacMdl = pacmodel.Parse(pacmodel.DecodePACFile("pac3/acs_heli/basicheli.txt", "DATA")),
 
     dmg =
     {
@@ -34,6 +22,7 @@ local Heli =
         }
     },
     
+    mass = 2400,
     throttleStrength = 0.25,
 
     altitudeStrength = 1,

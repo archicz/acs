@@ -1,22 +1,19 @@
 local Heli = {}
 
 function Heli:Initialize()
-	self:SetModel("models/Combine_Helicopter.mdl")
-	self:PhysicsInit(SOLID_VPHYSICS)
-	self:SetMoveType(MOVETYPE_VPHYSICS)
-	self:SetSolid(SOLID_VPHYSICS)
+end
 
-	local phys = self:GetPhysicsObject()
-	if phys:IsValid() then
-		phys:Wake()
-	end
-
-    self:SetSubMaterial(1, "models/effects/vol_light001")
+function Heli:OnHeliMainRotorHit(traceResult)
+    local effectdata = EffectData()
+    effectdata:SetOrigin(traceResult.HitPos)
+    effectdata:SetScale(8)
+    effectdata:SetMagnitude(25)
+    util.Effect("acs_rotorscrape", effectdata)
 end
 
 function Heli:OnDamagePhysicsCollide(colData)
     local effectdata = EffectData()
-    effectdata:SetOrigin(colData["HitPos"])
+    effectdata:SetOrigin(colData.HitPos)
     effectdata:SetScale(4)
     effectdata:SetMagnitude(25)
     util.Effect("acs_metalscrape", effectdata)

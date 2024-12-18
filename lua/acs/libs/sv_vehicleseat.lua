@@ -166,3 +166,52 @@ end
 function PlyMeta:SetVehicleSeat(seatEnt)
     self.VehicleSeat = seatEnt
 end
+
+if not pacmodel then return end
+
+local function ParseVehicleSeat(name, tbl)
+    if name != "vehicleseat" then return end
+
+    local seats = tbl["children"]
+    local seatsCfg = {}
+
+    for i = 1, #seats do
+        local seat = seats[i]["self"]
+
+        local seatCfg = {}
+        seatCfg["name"] = seat["Name"]
+        seatCfg["pos"] = seat["Position"]
+        seatCfg["ang"] = seat["Angles"]
+
+        if vehicleweapon then -- This will change
+            local seatWeapons = {}
+            local weaponsList = {}
+
+            if seats[i]["children"] then
+                seatWeapons = seats[i]["children"]
+            end
+            
+            for j = 1, #seatWeapons do
+                local seatWeapon = seatWeapons[i]["self"]
+                table.insert(weaponsList, seatWeapon["Name"])
+            end
+    
+            seatCfg["weapons"] = weaponsList
+        end
+
+        table.insert(seatsCfg, seatCfg)
+    end
+
+    return seatsCfg
+end
+
+local function CreateVehicleSeat(ent, name, seatsCfg)
+    if CLIENT then return end
+    if name != "vehicleseat" then return end
+
+    vehicleseat.SetupVehicle(ent)
+    ent:VehicleCreateSeats(seatsCfg)
+end
+
+hook.Add("OnPACModelParse", "PACModelParseVehicleSeat", ParseVehicleSeat)
+hook.Add("OnPACModelCreate", "PACModelCreateVehicleSeat", CreateVehicleSeat)

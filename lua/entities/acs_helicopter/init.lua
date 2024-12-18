@@ -10,7 +10,7 @@ function ENT:SpawnFunction(ply, tr, className)
         ply,
         tr.HitPos + tr.HitNormal * 16,
         Angle(0, 0, 0),
-        "combine_heli"
+        "basic_heli"
     )
 
 	return ent
@@ -20,12 +20,17 @@ end
 function ENT:Initialize()
     self:SetUseType(SIMPLE_USE)
 
-    vehicleseat.SetupVehicle(self)
-    self:VehicleCreateSeats(self:HeliData("seats"))
+    pacmodel.SetupEntity(self)
+    self:PACModelCreate(self:HeliData("pacMdl"))
 
     dmgsystem.SetupEntity(self)
     self:DamageInit(self:HeliData("dmg"))
     
+    local phys = self:GetPhysicsObject()
+    if IsValid(phys) then
+        phys:SetMass(self:HeliData("mass"))
+    end
+
     self:HeliCall("Initialize")
 end
 
@@ -109,6 +114,72 @@ function ENT:HeliUpdateRotorWash()
     end
 end
 
+function ENT:OnHeliMainRotorHit(traceResult)
+    self:HeliCall("OnHeliMainRotorHit", traceResult)
+end
+
+function ENT:OnHeliTailRotorHit(traceResult)
+    self:HeliCall("OnHeliTailRotorHit", traceResult)
+end
+
+function ENT:HeliCheckMainRotor()
+    local mainRotorOrigin = self:HeliMainRotorOrigin()
+    local mainRotorAng = self:HeliMainRotorAng()
+
+    local startPos = self:LocalToWorld(mainRotorOrigin["pos"])
+    local rotorDir = self:LocalToWorldAngles(Angle(0, mainRotorAng, 0)):Forward()
+    local rotorRadius = mainRotorOrigin["radius"]
+    local endPos = startPos + rotorDir * rotorRadius
+
+    -- debugoverlay.Line(startPos, endPos, 0.2, Color(0, 255, 0), true)
+
+    local mainRotorTrace = util.TraceLine(
+        {
+            start = startPos,
+            endpos = endPos,
+            mask = MASK_SOLID_BRUSHONLY,
+        }
+    )
+
+    if mainRotorTrace.Hit then
+        self:OnHeliMainRotorHit(mainRotorTrace)
+    end
+end
+
+function ENT:HeliCheckTailRotor()
+    local tailRotorOrigin = self:HeliTailRotorOrigin()
+    local tailRotorAng = self:HeliTailRotorAng()
+
+    local startPos = self:LocalToWorld(tailRotorOrigin["pos"])
+    local rotorDir = self:LocalToWorldAngles(Angle(tailRotorAng, 0, 90)):Forward()
+    local rotorRadius = tailRotorOrigin["radius"]
+    local endPos = startPos + rotorDir * rotorRadius
+
+    -- debugoverlay.Line(startPos, endPos, 0.2, Color(0, 255, 255), true)
+
+    local tailRotorTrace = util.TraceLine(
+        {
+            start = startPos,
+            endpos = endPos,
+            mask = MASK_SOLID_BRUSHONLY,
+        }
+    )
+
+    if tailRotorTrace.Hit then
+        self:OnHeliTailRotorHit(mainRotorTrace)
+    end
+end
+
+function ENT:HeliCheckRotors()
+    if not self:HeliActive() then return end
+    if not universaltimeout.Check(self, "rotorCheck") then return end
+
+    self:HeliCheckMainRotor()
+    self:HeliCheckTailRotor()
+
+    universaltimeout.Attach(self, "rotorCheck", 0.075)
+end
+
 function ENT:SimulateHeliCollective(phys)
     local collective = self:GetCollective()
     local altitude = self.AltitudeAnalog:Output()
@@ -169,6 +240,8 @@ end
 function ENT:Think()
     self:HeliUpdateControls()
     self:HeliUpdateRotorWash()
+    self:HeliUpdateRotors()
+    self:HeliCheckRotors()
 	self:NextThink(CurTime())
 
 	return true

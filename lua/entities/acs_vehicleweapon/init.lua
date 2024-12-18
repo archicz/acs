@@ -10,6 +10,9 @@ function ENT:Initialize()
         self:WeaponClipReload()
     end
 
+    pacmodel.SetupEntity(self)
+    self:PACModelCreate(self:WeaponData("pacMdl"))
+
     self:WeaponCall("Initialize")
 end
 

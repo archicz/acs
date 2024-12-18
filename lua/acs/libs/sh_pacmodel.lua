@@ -1,6 +1,7 @@
 pacmodel = {}
 
 -- OnPACModelParse (string groupName, tbl groupTbl)
+-- OnPACModelCreate (string groupName, tbl parsedTbl)
 
 function pacmodel.DecodePAC(data)
     local func = CompileString(string.format("return { %s }", data), "luadata_decode", false)
@@ -29,7 +30,19 @@ function pacmodel.Parse(tbl)
 end
 
 function pacmodel.SetupEntity(ent)
-    
+    function ent:PACModelGetGroup(name)
+        return ent.PACModel[name]
+    end
+
+    function ent:PACModelCreate(pacMdl)
+        ent.PACModel = pacMdl
+
+        ent:DrawShadow(false)
+
+        for groupName, tbl in pairs(pacMdl) do
+            hook.Run("OnPACModelCreate", ent, groupName, tbl)
+        end
+    end
 end
 
 function pacmodel.ParsePhysics(name, tbl)
@@ -66,11 +79,36 @@ function pacmodel.ParsePhysics(name, tbl)
     return meshes
 end
 
+function pacmodel.CreatePhysics(ent, name, meshes)
+    if name != "physics" then return end
+
+    ent:PhysicsInitMultiConvex(meshes)
+    ent:SetSolid(SOLID_VPHYSICS)
+    ent:SetMoveType(MOVETYPE_VPHYSICS)
+    ent:EnableCustomCollisions(true)
+    ent:PhysWake()
+end
+
 function pacmodel.ParseVisual(name, tbl)
     if name != "visual" then return end
-
     return tbl
 end
 
+function pacmodel.CreateVisuals(ent, name, outfit)
+    if SERVER then return end
+    if name != "visual" then return end
+
+    pac.SetupENT(ent)
+    ent:AttachPACPart(outfit)
+    ent:SetPACDrawDistance(2048) -- TODO: Make a cvar/setting
+
+    function ent:PACModelGetOutfit()
+        return outfit
+    end
+end
+
 hook.Add("OnPACModelParse", "PACModelParsePhysics", pacmodel.ParsePhysics)
+hook.Add("OnPACModelCreate", "PACModelCreatePhysics", pacmodel.CreatePhysics)
+
 hook.Add("OnPACModelParse", "PACModelParseVisual", pacmodel.ParseVisual)
+hook.Add("OnPACModelCreate", "PACModelCreateVisuals", pacmodel.CreateVisuals)

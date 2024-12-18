@@ -2,7 +2,7 @@ local Weapon = {}
 
 function Weapon:SpawnRockets()
     local clip = self:GetClip()
-    local origins = self:WeaponData("origins")
+    local origins = self:WeaponGetOrigins()
     local missileName = self:WeaponData("missileName")
     
     for i = 1, clip do

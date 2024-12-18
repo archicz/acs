@@ -186,3 +186,54 @@ end
 net.Receive(vehicleweapon.NetworkString, vehicleweapon.ClientNetwork)
 hook.Add("OnVehicleSeatEnter", "VehicleWeaponEnter", vehicleweapon.SeatEnter)
 hook.Add("OnVehicleSeatExit", "VehicleWeaponExit", vehicleweapon.SeatExit)
+
+if not pacmodel then return end
+
+local function ParseVehicleWeapon(name, tbl)
+    if name != "vehicleweapon" then return end
+
+    local groups = tbl["children"]
+    local wpnCfg = {}
+
+    for i = 1, #groups do
+        local group = groups[i]
+        local groupInfo = group["self"]
+        local groupName = groupInfo["Name"]
+
+        if groupName == "origin" then
+            local origin = {}
+            local originParts = group["children"]
+            
+            for j = 1, #originParts do
+                local originPart = originParts[j]["self"]
+
+                table.insert(origin, 
+                    {
+                        name = originPart["Name"],
+                        pos = originPart["Position"],
+                        ang = originPart["Angles"]
+                    }
+                )
+            end
+
+            wpnCfg["origin"] = origin
+        end
+    end
+
+    return wpnCfg
+end
+
+local function CreateVehicleWeapon(ent, name, wpnCfg)
+    if name != "vehicleweapon" then return end
+
+    function ent:WeaponGetOrigins()
+        return wpnCfg["origin"]
+    end
+
+    function ent:WeaponGetOrigin(name)
+        return wpnCfg["origin"][name]
+    end
+end
+
+hook.Add("OnPACModelParse", "PACModelParseVehicleWeapon", ParseVehicleWeapon)
+hook.Add("OnPACModelCreate", "PACModelCreateVehicleWeapon", CreateVehicleWeapon)

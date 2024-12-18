@@ -1,18 +1,8 @@
 local Weapon =
 {
-    printName = "Missile Launcher",
+    pacMdl = pacmodel.Parse(pacmodel.DecodePACFile("pac3/acs_weapons/missile_launcher.txt", "DATA")),
 
-    origins =
-    {
-        {
-            pos = Vector(21, -64, -71),
-            ang = Angle(0, 0, 0)
-        },
-        {
-            pos = Vector(21, 64, -71),
-            ang = Angle(0, 0, 0)
-        }
-    },
+    printName = "Missile Launcher",
 
     missileName = "stinger",
 

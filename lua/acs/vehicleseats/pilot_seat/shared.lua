@@ -1,8 +1,8 @@
 local Seat = 
 {
-    mdl = "models/nova/jeep_seat.mdl",
+    mdl = "models/nova/jalopy_seat.mdl",
     solid = false,
-    visible = false,
+    visible = true,
 
     animatedEntrance = true,
     entranceDuration = 0.75,
