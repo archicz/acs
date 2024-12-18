@@ -15,8 +15,8 @@ local Heli =
 
         physics = 
         {
-            collideThreshold = 75,
-            damageThreshold = 500,
+            collideThreshold = 200,
+            damageThreshold = 575,
             damageCoeff = 0.05,
             damageMax = 200
         }

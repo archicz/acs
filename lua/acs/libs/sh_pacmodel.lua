@@ -1,6 +1,6 @@
 pacmodel = {}
 
-PACMODEL_VISUAL_DISTANCE = 8192 -- TODO: Make a cvar/setting?
+PACMODEL_VISUAL_DISTANCE = 16384 -- TODO: Make a cvar/setting?
 
 -- OnPACModelParse (string groupName, tbl groupTbl)
 -- OnPACModelCreate (string groupName, tbl parsedTbl)
@@ -47,7 +47,7 @@ function pacmodel.SetupEntity(ent)
     end
 end
 
-function pacmodel.ParsePhysics(name, tbl)
+local function ParsePhysics(name, tbl)
     if name != "physics" then return end
 
     local physicsBodies = tbl["children"]
@@ -81,7 +81,7 @@ function pacmodel.ParsePhysics(name, tbl)
     return meshes
 end
 
-function pacmodel.CreatePhysics(ent, name, meshes)
+local function CreatePhysics(ent, name, meshes)
     if name != "physics" then return end
 
     ent:PhysicsInitMultiConvex(meshes)
@@ -91,30 +91,5 @@ function pacmodel.CreatePhysics(ent, name, meshes)
     ent:PhysWake()
 end
 
-function pacmodel.ParseVisual(name, tbl)
-    if name != "visual" then return end
-    return tbl
-end
-
-function pacmodel.CreateVisuals(ent, name, outfit)
-    if SERVER then return end
-    if name != "visual" then return end
-
-    pac.SetupENT(ent)
-    ent:AttachPACPart(outfit)
-    ent:SetPACDrawDistance(PACMODEL_VISUAL_DISTANCE)
-
-    function ent:PACModelGetOutfit()
-        return outfit
-    end
-
-    function ent:PACModelRemoveOutfit()
-        ent:RemovePACPart(outfit)
-    end
-end
-
-hook.Add("OnPACModelParse", "PACModelParsePhysics", pacmodel.ParsePhysics)
-hook.Add("OnPACModelCreate", "PACModelCreatePhysics", pacmodel.CreatePhysics)
-
-hook.Add("OnPACModelParse", "PACModelParseVisual", pacmodel.ParseVisual)
-hook.Add("OnPACModelCreate", "PACModelCreateVisuals", pacmodel.CreateVisuals)
+hook.Add("OnPACModelParse", "PACModelParsePhysics", ParsePhysics)
+hook.Add("OnPACModelCreate", "PACModelCreatePhysics", CreatePhysics)
