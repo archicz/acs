@@ -17,6 +17,9 @@ function ENT:SpawnFunction(ply, tr, className)
 end
 -- DEBUG ONLY, REMOVE THIS
 
+ENT.MainRotorHits = 0
+ENT.TailRotorHits = 0
+
 function ENT:Initialize()
     self:SetUseType(SIMPLE_USE)
 
@@ -131,8 +134,6 @@ function ENT:HeliCheckMainRotor()
     local rotorRadius = mainRotorOrigin["radius"]
     local endPos = startPos + rotorDir * rotorRadius
 
-    -- debugoverlay.Line(startPos, endPos, 0.2, Color(0, 255, 0), true)
-
     local mainRotorTrace = util.TraceLine(
         {
             start = startPos,
@@ -155,8 +156,6 @@ function ENT:HeliCheckTailRotor()
     local rotorRadius = tailRotorOrigin["radius"]
     local endPos = startPos + rotorDir * rotorRadius
 
-    -- debugoverlay.Line(startPos, endPos, 0.2, Color(0, 255, 255), true)
-
     local tailRotorTrace = util.TraceLine(
         {
             start = startPos,
@@ -166,7 +165,7 @@ function ENT:HeliCheckTailRotor()
     )
 
     if tailRotorTrace.Hit then
-        self:OnHeliTailRotorHit(mainRotorTrace)
+        self:OnHeliTailRotorHit(tailRotorTrace)
     end
 end
 

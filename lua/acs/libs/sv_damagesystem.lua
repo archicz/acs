@@ -20,20 +20,21 @@ function dmgsystem.SetupEntity(ent)
 
             if IsValid(hitEntity) and hitEntity:IsPlayer() then return end
 
+            if velocity >= physCfg["damageThreshold"] then
+                local damage = math.Clamp(velocity * physCfg["damageCoeff"], 0, physCfg["damageMax"])
+                local dmgInfo = DamageInfo()
+                dmgInfo:SetDamageType(DMGSYS_TYPE_PHYSICS)
+                dmgInfo:SetInflictor(hitEntity)
+                dmgInfo:SetDamagePosition(pos)
+                dmgInfo:SetDamage(damage)
+                
+                self:TakeDamageInfo(dmgInfo)
+                ent:OnDamagePhysicsDamage(colData)
+                return
+            end
+            
             if velocity < physCfg["collideThreshold"] then return end
             ent:OnDamagePhysicsCollide(colData)
-            
-            if velocity < physCfg["damageThreshold"] then return end
-            ent:OnDamagePhysicsDamage(colData)
-
-            local damage = math.Clamp(velocity * physCfg["damageCoeff"], 0, physCfg["damageMax"])
-            local dmgInfo = DamageInfo()
-            dmgInfo:SetDamageType(DMGSYS_TYPE_PHYSICS)
-            dmgInfo:SetInflictor(hitEntity)
-            dmgInfo:SetDamagePosition(pos)
-            dmgInfo:SetDamage(damage)
-            
-            self:TakeDamageInfo(dmgInfo)
         end
     end
 end

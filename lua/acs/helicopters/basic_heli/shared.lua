@@ -25,6 +25,9 @@ local Heli =
     mass = 2400,
     throttleStrength = 0.25,
 
+    maxMainRotorHits = 4,
+    maxTailRotorHits = 3,
+
     altitudeStrength = 1,
     altitudeForce = 1.75,
     altitudeFactor = 400,
