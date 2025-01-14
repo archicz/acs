@@ -1,3 +1,7 @@
+if SERVER then
+    AddCSLuaFile("outfit.lua")
+end
+
 local Heli =
 {
     pacMdl = pacmodel.Parse(include("outfit.lua")),

@@ -1,3 +1,7 @@
+if SERVER then
+    AddCSLuaFile("outfit.lua")
+end
+
 local Weapon =
 {
     pacMdl = pacmodel.Parse(include("outfit.lua")),
