@@ -7,20 +7,20 @@ local WidthDPI = ScrW() / BaseWidth
 local HeightDPI = ScrH() / BaseHeight
 local BothDPI = math.min(WidthDPI, HeightDPI)
 
-function ScaleWidthDPI(w)
-    return w * WidthDPI
-end
-
-function ScaleHeightDPI(h)
-    return h * HeightDPI
-end
-
-function ScaleDPI(n)
-    return n * BothDPI
-end
-
 function surface.CreateFontDPI(name, fontData)
     fontData["size"] = fontData["size"] * BothDPI
 
     surface.CreateFont(name, fontData)
+end
+
+function surface.ScaleWidthDPI(w)
+    return w * WidthDPI
+end
+
+function surface.ScaleHeightDPI(h)
+    return h * HeightDPI
+end
+
+function surface.ScaleDPI(n)
+    return n * BothDPI
 end
