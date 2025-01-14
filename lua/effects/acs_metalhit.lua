@@ -1,5 +1,5 @@
 function EFFECT:Init(data)
-    EmitSound("Metal_Box.ImpactHard", data:GetOrigin())
+    EmitSound("MetalVent.ImpactHard", data:GetOrigin())
     util.Effect("stunstickimpact", data)
 end
 
