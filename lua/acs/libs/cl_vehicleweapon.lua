@@ -66,11 +66,11 @@ function vehicleweapon.DrawHUD()
     local numWps = #wps
     local activeWpnID = vehicleseat.GetSelectedWeaponIndex()
 
-    local wpnBoxSize = ScaleDPI(96)
-    local wpnBoxPadding = ScaleDPI(4)
+    local wpnBoxSize = surface.ScaleDPI(96)
+    local wpnBoxPadding = surface.ScaleDPI(4)
 
-    local wpnBoxCaptionHeight = ScaleHeightDPI(16)
-    local wpnBoxOutlineSize = ScaleDPI(1)
+    local wpnBoxCaptionHeight = surface.ScaleHeightDPI(16)
+    local wpnBoxOutlineSize = surface.ScaleDPI(1)
 
     local wpnBoxesWidth = numWps * wpnBoxSize + (numWps - 1) * wpnBoxPadding
     local wpnBoxesHeight = wpnBoxSize
