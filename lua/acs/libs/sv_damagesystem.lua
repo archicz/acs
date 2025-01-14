@@ -6,7 +6,25 @@ function dmgsystem.SetupEntity(ent)
         self:SetHealth(dmgCfg["defaultHealth"])
 
         function ent:OnTakeDamage(dmgInfo)
+            local dmgInfoType = dmgInfo:GetDamageType()
+            if dmgCfg["physics"] and dmgInfoType == DMGSYS_TYPE_PHYSICS then
+                return dmgInfo:GetDamage()
+            end
 
+            local allowedTypes = dmgCfg["types"]
+            for i = 1, #allowedTypes do
+                local dmgType = allowedTypes[i]["type"]
+                local dmgCoeff = allowedTypes[i]["coeff"]
+                
+                if dmgType == dmgInfoType then
+                    dmgInfo:ScaleDamage(dmgCoeff)
+                    self:OnDamageTaken(dmgInfo)
+
+                    return dmgInfo:GetDamage()
+                end
+            end
+
+            return 0
         end
 
         if not dmgCfg["physics"] then return end
