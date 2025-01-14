@@ -1,6 +1,6 @@
 local Weapon =
 {
-    pacMdl = pacMdl = pacmodel.Parse(include("outfit.lua")),
+    pacMdl = pacmodel.Parse(include("outfit.lua")),
 
     printName = "Missile Launcher",
 
