@@ -117,16 +117,10 @@ function ENT:HeliUpdateRotorWash()
     end
 end
 
-function ENT:OnHeliMainRotorHit(traceResult)
-    self:HeliCall("OnHeliMainRotorHit", traceResult)
-end
-
-function ENT:OnHeliTailRotorHit(traceResult)
-    self:HeliCall("OnHeliTailRotorHit", traceResult)
-end
-
 function ENT:HeliCheckMainRotor()
     local mainRotorOrigin = self:HeliMainRotorOrigin()
+    if not mainRotorOrigin then return end
+
     local mainRotorAng = self:HeliMainRotorAng()
 
     local startPos = self:LocalToWorld(mainRotorOrigin["pos"])
@@ -147,8 +141,25 @@ function ENT:HeliCheckMainRotor()
     end
 end
 
+function ENT:OnHeliMainRotorHit(traceResult)
+    local maxMainRotorHits = self:HeliData("maxMainRotorHits")
+    self.MainRotorHits = self.MainRotorHits + 1
+
+    if self.MainRotorHits >= maxMainRotorHits then
+        self:HeliDestroyMainRotor()  
+    end
+
+    self:HeliCall("OnHeliMainRotorHit", traceResult)
+end
+
+function ENT:HeliDestroyMainRotor()
+    self:HeliCall("OnHeliMainRotorDestroyed")
+end
+
 function ENT:HeliCheckTailRotor()
     local tailRotorOrigin = self:HeliTailRotorOrigin()
+    if not tailRotorOrigin then return end
+
     local tailRotorAng = self:HeliTailRotorAng()
 
     local startPos = self:LocalToWorld(tailRotorOrigin["pos"])
@@ -169,6 +180,21 @@ function ENT:HeliCheckTailRotor()
     end
 end
 
+function ENT:OnHeliTailRotorHit(traceResult)
+    local maxTailRotorHits = self:HeliData("maxTailRotorHits")
+    self.TailRotorHits = self.TailRotorHits + 1
+
+    if self.TailRotorHits >= maxTailRotorHits then
+        self:HeliDestroyTailRotor()  
+    end
+
+    self:HeliCall("OnHeliTailRotorHit", traceResult)
+end
+
+function ENT:HeliDestroyTailRotor()
+    self:HeliCall("OnHeliTailRotorDestroyed")
+end
+
 function ENT:HeliCheckRotors()
     if not self:HeliActive() then return end
     if not universaltimeout.Check(self, "rotorCheck") then return end
@@ -177,6 +203,10 @@ function ENT:HeliCheckRotors()
     self:HeliCheckTailRotor()
 
     universaltimeout.Attach(self, "rotorCheck", 0.075)
+end
+
+function ENT:OnDamageTaken(dmgInfo)
+    print(self:Health())
 end
 
 function ENT:SimulateHeliCollective(phys)
