@@ -95,6 +95,13 @@ function baseregistry.Reload()
         local registrySystem = RegistrarList[i]
         registrySystem.Reload()
     end
+
+    -- Ultra hack
+    if SERVER then
+        for _, ply in ipairs(player.GetAll()) do
+            ply:ConCommand("cl_registry_reload")
+        end
+    end
 end
 
 concommand.Add((CLIENT and "cl_" or "sv_") .. "registry_reload", baseregistry.Reload)
