@@ -25,9 +25,9 @@ function EFFECT:Init(data)
 end
 
 function EFFECT:Render()
-    if not self.Emitter then return end
-
     for i = 1, self.Magnitude do
+        if not self.Emitter then return end
+
         local part = self.Emitter:Add("effects/yellowflare", self.Pos)
         part:SetDieTime(self.Scale)
         part:SetColor(255, 191, 0)
@@ -42,5 +42,7 @@ function EFFECT:Render()
         part:SetVelocity(VectorRand() * 50)
     end
 
-    self.Emitter:Finish()
+    if self.Emitter then
+        self.Emitter:Finish()
+    end 
 end
