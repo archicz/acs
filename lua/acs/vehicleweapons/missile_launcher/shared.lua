@@ -1,6 +1,6 @@
 local Weapon =
 {
-    pacMdl = pacmodel.Parse(pacmodel.DecodePACFile("pac3/acs_weapons/missile_launcher.txt", "DATA")),
+    pacMdl = pacMdl = pacmodel.Parse(include("outfit.lua")),
 
     printName = "Missile Launcher",
 

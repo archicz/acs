@@ -1,7 +1,7 @@
 local Heli =
 {
-    pacMdl = pacmodel.Parse(pacmodel.DecodePACFile("pac3/acs_heli/basicheli.txt", "DATA")),
-
+    pacMdl = pacmodel.Parse(include("outfit.lua")),
+    
     dmg =
     {
         maxHealth = 2000,
@@ -9,8 +9,18 @@ local Heli =
 
         types =
         {
-            [DMGSYS_TYPE_EXPLOSIVE] = 1,
-            [DMGSYS_TYPE_AP] = 0.5
+            {
+                type = DMGSYS_TYPE_EXPLOSIVE,
+                coeff = 1
+            },
+            {
+                type = DMGSYS_TYPE_AP,
+                coeff = 0.5
+            },
+            {
+                type = bit.bor(DMGSYS_TYPE_EXPLOSIVE, DMGSYS_TYPE_AP),
+                coeff = 0.75
+            }
         },
 
         physics = 
